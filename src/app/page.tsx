@@ -2,60 +2,120 @@
 
 import { useState, useRef, useEffect } from 'react';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
+import { supabase } from '@/lib/supabase';
 import './login.css';
 
+
 export default function Login() {
+  const router = useRouter();
   const [step, setStep] = useState<'login' | 'otp'>('login');
   const [fullName, setFullName] = useState('');
-  const [contactInfo, setContactInfo] = useState(''); // Replaces phoneNumber, can be email or phone
+  const [contactInfo, setContactInfo] = useState('');
+  const [password, setPassword] = useState('');
   const [otp, setOtp] = useState(['', '', '', '', '', '']);
-
-  // Refs for OTP inputs to manage focus
+  const [loading, setLoading] = useState(false);
   const otpRefs = useRef<(HTMLInputElement | null)[]>([]);
 
-  // Allow unrestricted input initially (alphanumeric for email/phone mix)
   const handleContactChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setContactInfo(e.target.value);
   };
 
-  const handleLogin = () => {
-    // Validation Logic
+  const handleGoogleLogin = async () => {
+    const { error } = await supabase.auth.signInWithOAuth({
+      provider: "google",
+      options: { redirectTo: `${window.location.origin}/dashboard` },
+    });
+    if (error) alert(error.message);
+  };
+
+  const handleLogin = async () => {
     const isPhone = /^\d{10}$/.test(contactInfo);
+    // Allow standard email regex
     const isEmail = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(contactInfo);
 
     if (fullName && (isPhone || isEmail)) {
-      console.log('Requesting OTP for', { fullName, contactInfo, type: isPhone ? 'phone' : 'email' });
-      setStep('otp');
+      setLoading(true);
+      if (isPhone) {
+        // Phone OTP
+        const { error } = await supabase.auth.signInWithOtp({
+          phone: `+91${contactInfo}`,
+        });
+        if (error) alert(error.message);
+        else setStep('otp');
+      } else {
+        // Email + Password Login
+        // Note: For this flow to work well, we need a password input field which is currently missing in the UI
+        // I will add a prompt for password if not present, or assumed strictly 'login' means we have credentials.
+        // Wait, the UI doesn't have a password field yet in this merged version (it was name + email).
+        // I need to add a password input state and field first.
+
+        if (!password) {
+          alert("Please enter your password.");
+          setLoading(false);
+          return;
+        }
+
+        const { error } = await supabase.auth.signInWithPassword({
+          email: contactInfo,
+          password: password,
+        });
+
+        if (error) {
+          console.error(error);
+          // Check if user doesn't exist or invalid credentials
+          if (error.message.includes("Invalid login credentials")) {
+            // Could be wrong password OR user doesn't exist. 
+            // Security wise it's better not to distinguish, but user asked for redirect.
+            // We'll trust the user wants to sign up if login fails.
+            alert("Login failed. Redirecting to Sign Up.");
+            router.push("/signup");
+          } else {
+            alert(error.message);
+          }
+        } else {
+          router.push("/dashboard");
+        }
+      }
+      setLoading(false);
     } else {
-      alert("Please enter a valid Name and a valid Email Address or 10-digit Phone Number.");
+      alert("Please enter a valid Name and Contact Info.");
     }
   };
 
   const handleOtpChange = (index: number, value: string) => {
-    // Only allow numbers
     if (!/^\d*$/.test(value)) return;
-
     const newOtp = [...otp];
-    newOtp[index] = value.substring(value.length - 1); // Only take last char
+    newOtp[index] = value.substring(value.length - 1);
     setOtp(newOtp);
-
-    // Auto-focus next input
-    if (value && index < 5) {
-      otpRefs.current[index + 1]?.focus();
-    }
+    if (value && index < 5) otpRefs.current[index + 1]?.focus();
   };
 
   const handleOtpKeyDown = (index: number, e: React.KeyboardEvent<HTMLInputElement>) => {
-    // Handle Backspace
     if (e.key === 'Backspace' && !otp[index] && index > 0) {
       otpRefs.current[index - 1]?.focus();
     }
   };
 
-  const handleVerify = () => {
+  const handleVerify = async () => {
     const otpValue = otp.join('');
-    console.log('Verifying OTP:', otpValue);
-    // Add verification logic here
+    setLoading(true);
+    // Assuming Phone OTP for verification step as email magic link redirects automatically
+    // But if user used email, they wouldn't be on this step usually unless we did Email OTP (Supabase supports magic link by default)
+    // For MVP, assuming if they are on OTP step, it was phone.
+
+    const { error } = await supabase.auth.verifyOtp({
+      phone: `+91${contactInfo}`,
+      token: otpValue,
+      type: 'sms',
+    });
+
+    if (error) {
+      alert(error.message);
+    } else {
+      router.push('/dashboard');
+    }
+    setLoading(false);
   };
 
   return (
@@ -125,7 +185,20 @@ export default function Login() {
                   placeholder="Phone or Email Address"
                   value={contactInfo}
                   onChange={handleContactChange}
-                // inputMode removed to allow full keyboard for email
+                />
+              </div>
+
+              {/* Password Input (Only show if not phone, or just always show but optional for phone?) 
+                User said "when someone logs in with email, ask password".
+            */}
+              <div className="input-group">
+                <label className="input-label">Password (for Email)</label>
+                <input
+                  type="password"
+                  className="slick-input"
+                  placeholder="Password"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
                 />
               </div>
 
@@ -135,7 +208,7 @@ export default function Login() {
               </button>
 
               {/* Login With Google Button */}
-              <button className="google-button">
+              <button className="google-button" onClick={handleGoogleLogin}>
                 {/* Simple G icon */}
                 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24" fill="currentColor">
                   <path d="M12.545,10.239v3.821h5.445c-0.712,2.315-2.647,3.972-5.445,3.972c-3.332,0-6.033-2.701-6.033-6.032s2.701-6.032,6.033-6.032c1.498,0,2.866,0.549,3.921,1.453l2.814-2.814C17.503,2.988,15.139,2,12.545,2C7.021,2,2.543,6.477,2.543,12s4.478,10,10.002,10c8.396,0,10.249-7.85,9.426-11.748L12.545,10.239z" />

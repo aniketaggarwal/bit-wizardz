@@ -1,7 +1,8 @@
 'use client';
 
-import { useState, useRef } from 'react';
+import { useState } from 'react';
 import Link from 'next/link';
+import { supabase } from '@/lib/supabase';
 import './signup.css';
 
 export default function Signup() {
@@ -9,51 +10,31 @@ export default function Signup() {
     const [fullName, setFullName] = useState('');
     const [contactInfo, setContactInfo] = useState('');
     const [password, setPassword] = useState('');
-    const [otp, setOtp] = useState(['', '', '', '', '', '']);
 
-    // Refs for OTP inputs
-    const otpRefs = useRef<(HTMLInputElement | null)[]>([]);
-
-    const handleSignup = () => {
-        // Validation Logic
-        const isPhone = /^\d{10}$/.test(contactInfo);
+    const handleSignup = async () => {
         const isEmail = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(contactInfo);
 
-        if (fullName && (isPhone || isEmail) && password.length >= 6) {
-            console.log('Sending OTP to', { contactInfo });
-            setStep('otp');
+        if (fullName && isEmail && password.length >= 6) {
+            const { error } = await supabase.auth.signUp({
+                email: contactInfo,
+                password: password,
+                options: {
+                    data: {
+                        name: fullName,
+                    }
+                }
+            });
+
+            if (error) {
+                alert(error.message);
+            } else {
+                setStep('otp'); // Reuse 'otp' state to mean 'success/check-email' to minimize code diff
+            }
         } else {
-            alert("Please check your inputs. Password must be 6+ chars.");
+            alert("Please use a valid email and a password of at least 6 characters.");
         }
     };
 
-    const handleOtpChange = (index: number, value: string) => {
-        // Only allow numbers
-        if (!/^\d*$/.test(value)) return;
-
-        const newOtp = [...otp];
-        newOtp[index] = value.substring(value.length - 1); // Only take last char
-        setOtp(newOtp);
-
-        // Auto-focus next input
-        if (value && index < 5) {
-            otpRefs.current[index + 1]?.focus();
-        }
-    };
-
-    const handleOtpKeyDown = (index: number, e: React.KeyboardEvent<HTMLInputElement>) => {
-        // Handle Backspace
-        if (e.key === 'Backspace' && !otp[index] && index > 0) {
-            otpRefs.current[index - 1]?.focus();
-        }
-    };
-
-    const handleVerify = () => {
-        const otpValue = otp.join('');
-        console.log('Verifying & Creating Account:', { otpValue, fullName, contactInfo });
-        alert("Account Created Successfully!");
-        // Redirect to Dashboard or Login
-    };
 
     return (
         <main className="signup-container">
@@ -131,32 +112,22 @@ export default function Signup() {
                         </div>
                     </>
                 ) : (
-                    <>
-                        <p style={{ textAlign: 'center', color: '#64748b', marginBottom: '20px' }}>
-                            We've sent a code to {contactInfo}
-                        </p>
-
-                        {/* OTP Inputs */}
-                        <div className="otp-container">
-                            {otp.map((digit, index) => (
-                                <input
-                                    key={index}
-                                    ref={(el) => { otpRefs.current[index] = el }}
-                                    type="text"
-                                    className="otp-box"
-                                    maxLength={1}
-                                    value={digit}
-                                    onChange={(e) => handleOtpChange(index, e.target.value)}
-                                    onKeyDown={(e) => handleOtpKeyDown(index, e)}
-                                    inputMode="numeric"
-                                />
-                            ))}
+                    <div style={{ textAlign: 'center', padding: '20px' }}>
+                        <div style={{ marginBottom: '20px', color: '#10b981' }}>
+                            <svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg>
                         </div>
-
-                        <button className="verify-button" onClick={handleVerify}>
-                            Verify & Create Account
-                        </button>
-                    </>
+                        <h2 style={{ fontSize: '1.5rem', marginBottom: '10px', color: '#fff' }}>Verify Your Email</h2>
+                        <p style={{ color: '#94a3b8', marginBottom: '30px' }}>
+                            We've sent a confirmation link to <br />
+                            <strong style={{ color: '#fff' }}>{contactInfo}</strong>
+                        </p>
+                        <p style={{ fontSize: '0.9rem', color: '#64748b' }}>
+                            Please check your inbox (and spam folder) and click the link to activate your account.
+                        </p>
+                        <Link href="/" className="verify-button" style={{ display: 'inline-block', marginTop: '30px', textDecoration: 'none', lineHeight: '48px' }}>
+                            Back to Login
+                        </Link>
+                    </div>
                 )}
 
             </div>
