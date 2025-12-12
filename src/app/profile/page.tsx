@@ -4,11 +4,13 @@ import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { supabase } from '@/lib/supabase';
 import Link from 'next/link';
+import '../login.css';
 
 export default function ProfilePage() {
     const router = useRouter();
     const [loading, setLoading] = useState(true);
     const [profile, setProfile] = useState<any>(null);
+    const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
 
     useEffect(() => {
         const fetchProfile = async () => {
@@ -99,6 +101,35 @@ export default function ProfilePage() {
 
                 </div>
             </div>
+
+            {/* Logout button under profile card */}
+            <div style={{ width: '100%', maxWidth: 640, marginTop: 18 }}>
+                <button
+                    onClick={() => setShowLogoutConfirm(true)}
+                    style={{ background: '#ffffff', color: '#dc2626', padding: '10px 14px', borderRadius: 10, border: '1px solid #e6eef8', fontWeight: 700 }}
+                >
+                    Logout
+                </button>
+            </div>
+
+            {/* Styled logout modal (centered) */}
+            {showLogoutConfirm && (
+                <div className="modal-overlay">
+                    <div className="modal-card">
+                        <h2 style={{ color: '#dc2626' }}>Logging Out?</h2>
+                        <p>You're about to sign out of your account. This will remove your active session.</p>
+                        <div className="modal-actions">
+                            <button className="modal-btn modal-btn--yes" onClick={async () => {
+                                setShowLogoutConfirm(false);
+                                await supabase.from('profiles').update({ active_device_id: null }).eq('id', (await supabase.auth.getUser()).data.user?.id);
+                                await supabase.auth.signOut();
+                                router.push('/');
+                            }}>Yes</button>
+                            <button className="modal-btn modal-btn--no" onClick={() => setShowLogoutConfirm(false)}>No</button>
+                        </div>
+                    </div>
+                </div>
+            )}
 
         </div>
     );
