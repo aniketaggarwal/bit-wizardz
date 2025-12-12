@@ -1,4 +1,7 @@
+'use client';
+
 import BackButton from '@/components/BackButton';
+import AuthKeyManager from '@/components/AuthKeyManager';
 
 export default function DashboardPage() {
     return (
@@ -19,6 +22,13 @@ export default function DashboardPage() {
                     <p className="text-3xl text-orange-600">0</p>
                 </div>
             </div>
+
+            <div className="mt-8 p-6 bg-gray-50 rounded-lg border">
+                <h2 className="text-xl font-bold mb-4">Device Authentication</h2>
+                <AuthKeyManager />
+
+            </div>
+
         </div>
     );
 }

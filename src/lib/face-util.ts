@@ -45,3 +45,7 @@ export const extractDescriptor = async (input: HTMLImageElement | HTMLVideoEleme
         return null;
     }
 };
+
+export const verifyFaceMatch = (face1: Float32Array, face2: Float32Array, threshold = 0.45): boolean => {
+    return faceapi.euclideanDistance(face1, face2) < threshold;
+};

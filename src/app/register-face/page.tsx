@@ -1,9 +1,16 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import FaceScanner from '@/components/FaceScanner';
 import BackButton from '@/components/BackButton';
 import * as faceapi from 'face-api.js';
+import { saveEncryptedEmbedding, loadEncryptedEmbeddings, clearSecureStorage } from '@/lib/encryption';
+
+// ... (existing imports)
+
+// ... inside component ...
+
+
 
 interface RegisteredFace {
     name: string;
@@ -14,16 +21,39 @@ export default function RegisterFacePage() {
     const [name, setName] = useState('');
     const [registeredFaces, setRegisteredFaces] = useState<RegisteredFace[]>([]);
     const [matchResult, setMatchResult] = useState<string>('');
+    const [isLoading, setIsLoading] = useState(true);
 
-    const handleRegister = (descriptor: Float32Array) => {
+    // Load encrypted faces on mount
+    useEffect(() => {
+        const loadFaces = async () => {
+            try {
+                const faces = await loadEncryptedEmbeddings();
+                setRegisteredFaces(faces);
+            } catch (error) {
+                console.error('Failed to load faces:', error);
+            } finally {
+                setIsLoading(false);
+            }
+        };
+        loadFaces();
+    }, []);
+
+    const handleRegister = async (descriptor: Float32Array) => {
         if (!name) {
             alert('Please enter a name first');
             return;
         }
-        setRegisteredFaces(prev => [...prev, { name, descriptor }]);
-        alert(`Registered ${name}`);
-        setName('');
-        setMatchResult('');
+
+        try {
+            await saveEncryptedEmbedding(name, descriptor);
+            setRegisteredFaces(prev => [...prev, { name, descriptor }]);
+            alert(`Securely Registered ${name}`);
+            setName('');
+            setMatchResult('');
+        } catch (error) {
+            console.error('Registration failed:', error);
+            alert('Failed to securely register face');
+        }
     };
 
     const handleVerify = (descriptor: Float32Array) => {
@@ -59,8 +89,10 @@ export default function RegisterFacePage() {
                             onChange={e => setName(e.target.value)}
                         />
                     </div>
-                    <p className="text-sm text-gray-500">Currently Registered: {registeredFaces.length}</p>
-                    <ul className="text-sm list-disc pl-5 mt-2">
+                    <p className="text-sm text-gray-500">
+                        {isLoading ? 'Loading secure storage...' : `Currently Registered: ${registeredFaces.length}`}
+                    </p>
+                    <ul className="text-sm list-disc pl-5 mt-2 max-h-32 overflow-y-auto">
                         {registeredFaces.map((f, i) => <li key={i}>{f.name}</li>)}
                     </ul>
                 </div>
@@ -86,6 +118,21 @@ export default function RegisterFacePage() {
                         Result: {matchResult}
                     </div>
                 )}
+
+                <div className="mt-8 pt-6 border-t font-mono text-xs text-center">
+                    <button
+                        onClick={async () => {
+                            if (confirm('⚠️ Are you sure you want to WIPE ALL DATA? This cannot be undone.')) {
+                                await clearSecureStorage();
+                                window.location.reload();
+                            }
+                        }}
+                        className="text-red-500 hover:text-red-700 underline"
+                    >
+                        [Reset / Wipe All Data]
+                    </button>
+                    <p className="mt-2 text-gray-400">Use this if you see decryption errors.</p>
+                </div>
             </div>
         </div>
     );
