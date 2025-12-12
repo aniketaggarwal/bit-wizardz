@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { useRouter } from 'next/navigation';
+import { useSearchParams, useRouter } from 'next/navigation';
 import BackButton from '@/components/BackButton';
 import FaceScanner from '@/components/FaceScanner';
 import { loadEncryptedEmbeddings } from '@/lib/encryption';
@@ -16,6 +16,8 @@ interface RegisteredFace {
 
 export default function CheckInPage() {
     const router = useRouter();
+    const searchParams = useSearchParams(); // Hook to read URL params
+
     // Standard State
     const [faces, setFaces] = useState<RegisteredFace[]>([]);
 
@@ -29,18 +31,21 @@ export default function CheckInPage() {
 
     useEffect(() => {
         loadEncryptedEmbeddings().then(setFaces);
-    }, []);
 
-    // 1. Simulate QR Scan (Enter Session ID)
-    const handleQrScan = async () => {
-        if (!sessionId) {
-            alert('Enter a Session ID (QR Code)');
-            return;
+        // Auto-Check Session from URL
+        const urlSession = searchParams.get('session_id');
+        if (urlSession) {
+            setSessionId(urlSession);
+            // Small timeout to allow state update before "scanning"
+            setTimeout(() => {
+                handleAutoStart(urlSession);
+            }, 500);
         }
+    }, [searchParams]);
 
+    const handleAutoStart = async (sid: string) => {
         setCheckinStep('fetch-nonce');
-        // Fetch Nonce from Backend
-        const fetchedNonce = await fetchNonce(sessionId);
+        const fetchedNonce = await fetchNonce(sid);
         if (fetchedNonce) {
             setNonce(fetchedNonce);
             setCheckinStep('scan-face');
@@ -48,6 +53,15 @@ export default function CheckInPage() {
             alert('Failed to fetch challenge from server. Check network.');
             setCheckinStep('scan-qr');
         }
+    };
+
+    // 1. Simulate QR Scan (Enter Session ID)
+    const handleQrScan = async () => {
+        if (!sessionId) {
+            alert('Enter a Session ID (QR Code)');
+            return;
+        }
+        await handleAutoStart(sessionId);
     };
 
     // 2. Face Scanned -> Verify -> Sign -> Send

@@ -26,7 +26,24 @@ export default function P1SU() {
         if (nameParam) {
             setName(nameParam);
         }
-    }, [searchParams]);
+
+        // Check if already verified
+        const checkExistingProfile = async () => {
+            const { data: { user } } = await supabase.auth.getUser();
+            if (user) {
+                const { data: profile } = await supabase
+                    .from('users')
+                    .select('id_last4')
+                    .eq('id', user.id)
+                    .single();
+
+                if (profile?.id_last4) {
+                    router.replace('/menu'); // Redirect if already setup
+                }
+            }
+        };
+        checkExistingProfile();
+    }, [searchParams, router]);
 
     const handleSendOtp = async () => {
         if (!isPhoneValid) return;

@@ -23,7 +23,7 @@ export default function Login() {
   const handleGoogleLogin = async () => {
     const { error } = await supabase.auth.signInWithOAuth({
       provider: "google",
-      options: { redirectTo: `${window.location.origin}/p1su` },
+      options: { redirectTo: `${window.location.origin}/auth/callback` },
     });
     if (error) alert(error.message);
   };
@@ -205,28 +205,28 @@ export default function Login() {
                 <input
                   type="text"
                   className="slick-input"
-                  placeholder="e.g. Aayush Makkar"
+                  placeholder="e.g. John Doe"
                   maxLength={40}
                   value={fullName}
                   onChange={(e) => setFullName(e.target.value)}
                 />
               </div>
 
-              {/* Contact Input (Phone or Email) */}
+              {/* Contact Input (Email) */}
               <div className="input-group">
-                <label className="input-label">Phone Number / Email</label>
+                <label className="input-label">Email Address</label>
                 <input
                   type="text"
                   className="slick-input"
-                  placeholder="Phone or Email Address"
+                  placeholder="name@example.com"
                   value={contactInfo}
                   onChange={handleContactChange}
                 />
               </div>
 
-              {/* Password Input (Optional/Conditional) */}
+              {/* Password Input */}
               <div className="input-group">
-                <label className="input-label">Password (if Email)</label>
+                <label className="input-label">Password</label>
                 <input
                   type="password"
                   className="slick-input"
