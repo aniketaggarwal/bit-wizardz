@@ -135,6 +135,7 @@ export default function Login() {
       {/* LEFT SIDE - BRANDING */}
       <div className="split-left">
         <div className="branding-content">
+          {/* Logo */}
           <div className="logo-placeholder">
             {/* Custom "FI" Speed Logo */}
             <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" className="h-16 w-16" fill="none" stroke="currentColor">
@@ -255,6 +256,10 @@ export default function Login() {
             Not a user? <Link href="/signup" className="signup-link">Sign Up!</Link>
           </div>
 
+          {/* Dev Link */}
+          <div style={{ marginTop: '20px', textAlign: 'center' }}>
+            <a href="/register-face" style={{ fontSize: '0.8rem', color: '#94a3b8', textDecoration: 'none' }}>[Dev: Go to Face Scan]</a>
+          </div>
         </div>
       </div>
 

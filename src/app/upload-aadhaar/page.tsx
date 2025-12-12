@@ -131,8 +131,8 @@ function UploadContent() {
     useEffect(() => {
         if (status === 'success') {
             const timer = setTimeout(() => {
-                router.push('/dashboard');
-            }, 2500);
+                router.push('/register-face');
+            }, 2500); // Wait for animation to finish + delay
             return () => clearTimeout(timer);
         }
     }, [status, router]);
