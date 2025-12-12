@@ -1,26 +1,20 @@
 import { NextResponse } from 'next/server';
-import { supabase } from '@/lib/supabase';
+import crypto from 'crypto';
 
-export async function POST(request: Request) {
-    const { sessionId } = await request.json();
+export async function GET(request: Request) {
+    const { searchParams } = new URL(request.url);
+    const sessionId = searchParams.get('session_id');
 
     if (!sessionId) {
-        return NextResponse.json({ error: 'Session ID required' }, { status: 400 });
+        return NextResponse.json({ error: 'Missing session_id' }, { status: 400 });
     }
 
-    const nonce = crypto.randomUUID();
+    // Generate a random 32-byte nonce
+    const nonce = crypto.randomBytes(32).toString('hex');
 
-    const { error } = await supabase
-        .from('checkins')
-        .update({
-            nonce: nonce,
-            status: 'pending_verification' // Update status
-        })
-        .eq('session_id', sessionId);
-
-    if (error) {
-        return NextResponse.json({ error: error.message }, { status: 500 });
-    }
+    // In a real app, we would store this nonce against the session_id in the DB 
+    // with an expiry to prevent replay attacks.
+    // await redis.set(`nonce:${sessionId}`, nonce, 'EX', 60);
 
     return NextResponse.json({ nonce });
 }
