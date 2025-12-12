@@ -1,6 +1,9 @@
+import BackButton from '@/components/BackButton';
+
 export default function DashboardPage() {
     return (
-        <div className="min-h-screen p-8">
+        <div className="min-h-screen p-8 relative">
+            <BackButton />
             <h1 className="text-3xl font-bold mb-8">Dashboard</h1>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                 <div className="p-6 bg-white shadow rounded-lg border">
