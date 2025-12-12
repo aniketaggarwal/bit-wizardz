@@ -75,7 +75,11 @@ export default function FaceScanner({ onScan, onInstructionChange }: FaceScanner
                         // Was blinking, now open -> Liveness Confirmed!
                         blinkingRef.current = false;
                         setStatus('scanned');
-                        setInstruction('Verified! Scanning...');
+                        setInstruction('Scan Complete!');
+
+                        // Freeze Frame
+                        videoRef.current?.pause();
+
                         onScan(descriptor);
                         stopScanningLoop();
                         return; // Stop loop
@@ -130,11 +134,6 @@ export default function FaceScanner({ onScan, onInstructionChange }: FaceScanner
                 </div>
             </div>
 
-            {status === 'scanned' && (
-                <button onClick={restart} className="px-6 py-2 bg-blue-600 text-white rounded-full font-semibold shadow-lg hover:bg-blue-700 transition z-10">
-                    Scan Again
-                </button>
-            )}
         </div>
     );
 }
