@@ -1,21 +1,51 @@
-export default function DashboardPage() {
+"use client";
+
+import { useEffect, useState } from "react";
+import { supabase } from "@/lib/supabase";
+import { useRouter } from "next/navigation";
+import CameraFeed from "../../components/CameraFeed";
+
+export default function Dashboard() {
+    const router = useRouter();
+    const [user, setUser] = useState<any>(null);
+
+    useEffect(() => {
+        const checkUser = async () => {
+            const { data: { user } } = await supabase.auth.getUser();
+            if (!user) {
+                router.push("/");
+            } else {
+                setUser(user);
+            }
+        };
+        checkUser();
+    }, [router]);
+
+    if (!user) return null;
+
     return (
-        <div className="min-h-screen p-8">
-            <h1 className="text-3xl font-bold mb-8">Dashboard</h1>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                <div className="p-6 bg-white shadow rounded-lg border">
-                    <h2 className="text-xl font-semibold mb-2">Total Check-ins</h2>
-                    <p className="text-3xl text-blue-600">0</p>
+        <div className="app-container">
+            <header className="app-header">
+                <h1>BIT WIZARDZ</h1>
+                <p>Biometric Identity Terminal</p>
+                <div style={{ fontSize: '0.8rem', marginTop: '5px', opacity: 0.5 }}>
+                    OPERATOR: {user.email || user.phone}
                 </div>
-                <div className="p-6 bg-white shadow rounded-lg border">
-                    <h2 className="text-xl font-semibold mb-2">Active Guests</h2>
-                    <p className="text-3xl text-green-600">0</p>
-                </div>
-                <div className="p-6 bg-white shadow rounded-lg border">
-                    <h2 className="text-xl font-semibold mb-2">Pending ID Reviews</h2>
-                    <p className="text-3xl text-orange-600">0</p>
-                </div>
-            </div>
+            </header>
+
+            <main>
+                <CameraFeed />
+            </main>
+
+            <footer className="app-footer">
+                <p>SECURE CONNECTION ESTABLISHED</p>
+                <button
+                    onClick={() => supabase.auth.signOut().then(() => router.push("/"))}
+                    style={{ background: 'none', border: 'none', color: 'inherit', textDecoration: 'underline', marginTop: '10px', cursor: 'pointer' }}
+                >
+                    TERMINATE SESSION
+                </button>
+            </footer>
         </div>
     );
 }
