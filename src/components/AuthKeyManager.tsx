@@ -4,6 +4,9 @@ import { useState, useEffect } from 'react';
 import { generateKeypair, getPublicKey, signChallenge, verifySignatureLocally } from '@/lib/auth-crypto';
 
 export default function AuthKeyManager() {
+    const [publicKey, setPublicKey] = useState<string>('');
+    const [testSignature, setTestSignature] = useState<string>('');
+    const [verificationResult, setVerificationResult] = useState<boolean | null>(null);
     const [syncStatus, setSyncStatus] = useState<'idle' | 'syncing' | 'synced' | 'error'>('idle');
 
     useEffect(() => {
@@ -57,8 +60,8 @@ export default function AuthKeyManager() {
                 <div className="flex justify-between items-center mb-2">
                     <label className="text-sm font-bold text-slate-400">Device Identity Key</label>
                     <span className={`text-xs font-bold px-2 py-1 rounded-full border ${syncStatus === 'synced' ? 'bg-green-900/30 text-green-400 border-green-500/30' :
-                            syncStatus === 'syncing' ? 'bg-blue-900/30 text-blue-400 border-blue-500/30 animate-pulse' :
-                                'bg-red-900/30 text-red-400 border-red-500/30'
+                        syncStatus === 'syncing' ? 'bg-blue-900/30 text-blue-400 border-blue-500/30 animate-pulse' :
+                            'bg-red-900/30 text-red-400 border-red-500/30'
                         }`}>
                         {syncStatus === 'synced' ? '✅ CLOUD SYNCED' :
                             syncStatus === 'syncing' ? '🔄 SYNCING...' : '⚠️ SYNC REQUIRED'}

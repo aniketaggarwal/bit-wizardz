@@ -1,5 +1,7 @@
 'use client';
 
+import { useState, useEffect } from 'react';
+
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { supabase } from '@/lib/supabase';
@@ -8,8 +10,30 @@ import BackButton from '@/components/BackButton';
 export default function MenuPage() {
     const router = useRouter();
 
+    const [userName, setUserName] = useState<string>('');
+
+    useEffect(() => {
+        const fetchProfile = async () => {
+            const { data: { user } } = await supabase.auth.getUser();
+            if (user) {
+                const { data } = await supabase.from('profiles').select('full_name').eq('id', user.id).single();
+                if (data?.full_name) setUserName(data.full_name);
+            }
+        }
+        fetchProfile();
+    }, []);
+
     return (
         <div className="min-h-screen bg-black text-white p-8 flex flex-col items-center relative">
+
+            {/* Top Corner Name */}
+            {userName && (
+                <div className="absolute top-6 right-6 flex items-center gap-3 bg-gray-900/80 backdrop-blur px-4 py-2 rounded-full border border-gray-800">
+                    <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
+                    <span className="text-sm font-medium text-gray-300">Welcome, <span className="text-white font-bold">{userName}</span></span>
+                </div>
+            )}
+
             <h1 className="text-3xl font-bold mb-2 mt-12 text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-purple-500">
                 Bit Wizardz
             </h1>
@@ -38,12 +62,13 @@ export default function MenuPage() {
                     <p className="text-sm text-gray-500">Guest Kiosk Mode</p>
                 </Link>
 
-                {/* 4. Admin Dashboard */}
-                <Link href="/dashboard" className="p-6 bg-gray-900 border border-gray-800 rounded-xl hover:border-orange-500 transition-all group">
-                    <div className="text-4xl mb-4 group-hover:scale-110 transition-transform">🛠️</div>
-                    <h2 className="text-xl font-bold mb-1">Admin Dashboard</h2>
-                    <p className="text-sm text-gray-500">Session Manager & Logs</p>
+                {/* 4. User Profile (New) */}
+                <Link href="/profile" className="p-6 bg-gray-900 border border-gray-800 rounded-xl hover:border-pink-500 transition-all group">
+                    <div className="text-4xl mb-4 group-hover:scale-110 transition-transform">🆔</div>
+                    <h2 className="text-xl font-bold mb-1">Your Profile</h2>
+                    <p className="text-sm text-gray-500">View Account Details</p>
                 </Link>
+
             </div>
 
             <footer className="mt-auto py-8">

@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
+import { supabase } from '@/lib/supabase';
 import '../signup/signup.css'; // Reusing styling from Signup
 
 export default function P1SU() {
@@ -19,11 +20,24 @@ export default function P1SU() {
         }
     }, [searchParams]);
 
-    const handleContinue = () => {
+    const handleContinue = async () => {
         if (dob && aadhaarLast4.length === 4) {
-            // Proceed
-            console.log('P1SU Details:', { name, dob, aadhaarLast4 });
-            router.push('/upload-id'); // Redirect to Upload Page
+            try {
+                const { data: { user } } = await supabase.auth.getUser();
+                if (user) {
+                    await supabase.from('profiles').upsert({
+                        id: user.id,
+                        full_name: name,
+                        aadhaar_last4: aadhaarLast4,
+                        phone: user.phone || '', // Capture phone if available
+                        last_active: new Date().toISOString()
+                    });
+                }
+                router.push('/upload-id');
+            } catch (error) {
+                console.error('Error saving profile:', error);
+                alert('Failed to save details. Please try again.');
+            }
         } else {
             alert("Please enter a valid DOB and the last 4 digits of your Aadhaar.");
         }

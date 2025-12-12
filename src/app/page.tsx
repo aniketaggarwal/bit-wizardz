@@ -268,11 +268,23 @@ export default function Login() {
             Not a user? <Link href="/signup" className="signup-link">Sign Up!</Link>
           </div>
 
-          {/* Quick Dashboard Access */}
+
+
+          {/* Quick Dashboard Access (Protected) */}
           <div className="mt-8 text-center">
-              <Link href="/dashboard" className="text-xs text-gray-400 hover:text-gray-600 underline">
-                Go to Admin Dashboard
-              </Link>
+            <button
+              onClick={() => {
+                const pin = prompt('Enter Admin Access Code:');
+                if (pin === '1234') {
+                  router.push('/dashboard');
+                } else if (pin !== null) {
+                  alert('⛔ Access Denied');
+                }
+              }}
+              className="text-xs text-gray-400 hover:text-gray-600 underline bg-transparent border-none cursor-pointer"
+            >
+              Go to Admin Dashboard
+            </button>
           </div>
 
         </div>
