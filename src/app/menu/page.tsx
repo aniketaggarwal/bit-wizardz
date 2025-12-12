@@ -16,8 +16,8 @@ export default function MenuPage() {
         const fetchProfile = async () => {
             const { data: { user } } = await supabase.auth.getUser();
             if (user) {
-                const { data } = await supabase.from('profiles').select('full_name').eq('id', user.id).single();
-                if (data?.full_name) setUserName(data.full_name);
+                const { data } = await supabase.from('users').select('name').eq('id', user.id).single();
+                if (data?.name) setUserName(data.name);
             }
         }
         fetchProfile();

@@ -19,7 +19,7 @@ export default function ProfilePage() {
             }
 
             const { data, error } = await supabase
-                .from('profiles')
+                .from('users')
                 .select('*')
                 .eq('id', user.id)
                 .single();
@@ -56,7 +56,7 @@ export default function ProfilePage() {
                     {/* Name */}
                     <div>
                         <label className="text-xs font-bold text-gray-500 uppercase tracking-widest mb-1 block">Full Name</label>
-                        <p className="text-2xl font-bold text-white capitalize">{profile?.full_name || 'User'}</p>
+                        <p className="text-2xl font-bold text-white capitalize">{profile?.name || 'User'}</p>
                     </div>
 
                     {/* Contact Info */}
@@ -82,7 +82,7 @@ export default function ProfilePage() {
                             <div>
                                 <p className="text-xs text-gray-500">Aadhaar Linked</p>
                                 <p className="text-xl font-mono text-white tracking-widest">
-                                    •••• •••• {profile?.aadhaar_last4 || 'XXXX'}
+                                    •••• •••• {profile?.id_last4 || 'XXXX'}
                                 </p>
                             </div>
                             <div className="bg-green-500/20 text-green-400 px-2 py-1 rounded text-xs font-bold">

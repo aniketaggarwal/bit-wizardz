@@ -25,13 +25,15 @@ export default function P1SU() {
             try {
                 const { data: { user } } = await supabase.auth.getUser();
                 if (user) {
-                    await supabase.from('profiles').upsert({
+                    const { error } = await supabase.from('users').upsert({
                         id: user.id,
-                        full_name: name,
-                        aadhaar_last4: aadhaarLast4,
-                        phone: user.phone || '', // Capture phone if available
-                        last_active: new Date().toISOString()
+                        name: name,               // Schema has 'name'
+                        id_last4: aadhaarLast4,   // Schema has 'id_last4'
+                        dob: dob,
+                        phone: user.phone || '',
+                        updated_at: new Date().toISOString() // Schema has 'updated_at'
                     });
+                    if (error) throw error;
                 }
                 router.push('/upload-id');
             } catch (error) {

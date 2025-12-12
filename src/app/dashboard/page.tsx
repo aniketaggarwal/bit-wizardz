@@ -129,7 +129,7 @@ export default function DashboardPage() {
                     <button
                         onClick={async () => {
                             if (!confirm('Logout from Admin Console?')) return;
-                            await supabase.from('profiles').update({ active_device_id: null }).eq('id', (await supabase.auth.getUser()).data.user?.id);
+                            await supabase.from('users').update({ active_device_id: null }).eq('id', (await supabase.auth.getUser()).data.user?.id);
                             await supabase.auth.signOut();
                             router.push("/");
                         }}

@@ -3,6 +3,7 @@
 import { useState, useRef, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { verifyAadhaarCard } from '@/lib/ocr-verification';
+import { supabase } from '@/lib/supabase';
 import './upload-id.css';
 
 export default function UploadIDPage() {
@@ -17,6 +18,26 @@ export default function UploadIDPage() {
     const [isScanning, setIsScanning] = useState(false);
     const [statusMatch, setStatusMatch] = useState<{ success: boolean; msg: string } | null>(null);
     const [isVerified, setIsVerified] = useState(false);
+    const [userDetails, setUserDetails] = useState<{ name: string; dob: string; last4: string } | null>(null);
+
+    // 0. Fetch User Details for Verification
+    useEffect(() => {
+        const fetchUser = async () => {
+            const { data: { user } } = await supabase.auth.getUser();
+            if (user) {
+                // Fetch from 'users' table (using the aligned schema)
+                const { data } = await supabase.from('users').select('name, dob, id_last4').eq('id', user.id).single();
+                if (data) {
+                    setUserDetails({
+                        name: data.name,
+                        dob: data.dob,
+                        last4: data.id_last4
+                    });
+                }
+            }
+        };
+        fetchUser();
+    }, []);
 
     // 1. Handle File Selection (Merge Logic + UI)
     const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -52,17 +73,27 @@ export default function UploadIDPage() {
         setStatusMatch(null);
 
         try {
-            const result = await verifyAadhaarCard(file);
+            // Pass userDetails if available for stricter checking
+            const result = await verifyAadhaarCard(file, userDetails || undefined);
 
             if (result.success) {
                 // Success!
-                setStatusMatch({ success: true, msg: `✅ Valid Aadhaar!` });
+                // 1. Update DB
+                const { data: { user } } = await supabase.auth.getUser();
+                if (user) {
+                    await supabase.from('users').update({ identity_verified: true }).eq('id', user.id);
+                }
+
+                // 2. UI Feedback
+                setStatusMatch({ success: true, msg: `✅ Valid Aadhaar! matched with records` });
                 setIsVerified(true); // Trigger UI Animation
             } else {
                 // Failed
                 setStatusMatch({
                     success: false,
-                    msg: `❌ Invalid Document. Could not verify Aadhaar.`
+                    msg: result.errors && result.errors.length > 0
+                        ? `❌ Verification Failed:\n${result.errors.join('\n')}`
+                        : `❌ Invalid Document. Could not verify Aadhaar.`
                 });
             }
         } catch (error) {

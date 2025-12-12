@@ -86,7 +86,7 @@ export default function Login() {
             }
 
             // 2. Lock this Device (or re-affirm lock)
-            await supabase
+            const { error: upsertError } = await supabase
               .from('profiles')
               .upsert({
                 id: userId,
@@ -94,9 +94,21 @@ export default function Login() {
                 last_active: new Date().toISOString()
               });
 
-            // 3. Proceed
-            const name = data.user?.user_metadata?.name || 'User';
-            router.push(`/p1su?name=${encodeURIComponent(name)}`);
+            if (upsertError) throw upsertError;
+
+            // 3. Check if user profile exists to decide redirect
+            const { data: userProfile } = await supabase
+              .from('users')
+              .select('id_last4')
+              .eq('id', userId)
+              .single();
+
+            if (userProfile?.id_last4) {
+              router.push('/menu');
+            } else {
+              const name = data.user?.user_metadata?.name || 'User';
+              router.push(`/p1su?name=${encodeURIComponent(name)}`);
+            }
 
           } catch (lockError) {
             console.error('Lock Check Failed:', lockError);
