@@ -43,17 +43,17 @@ export const fetchNonce = async (sessionId: string): Promise<string | null> => {
     }
 };
 
-export const sendVerification = async (signature: string, nonce: string, sessionId: string, publicKey: string): Promise<boolean> => {
+export const sendVerification = async (signature: string, nonce: string, sessionId: string, publicKey: string, guestName: string): Promise<{ success: boolean; error?: string; room?: string }> => {
     try {
         const res = await fetch('/api/verify', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ signature, nonce, session_id: sessionId, public_key: publicKey })
+            body: JSON.stringify({ signature, nonce, session_id: sessionId, public_key: publicKey, guest_name: guestName })
         });
         const data = await res.json();
-        return data.success;
+        return { success: data.success, error: data.error, room: data.room };
     } catch (e) {
         console.error('sendVerification error:', e);
-        return false;
+        return { success: false, error: 'Network Error' };
     }
 };

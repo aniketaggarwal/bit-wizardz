@@ -64,8 +64,44 @@ export default function Login() {
             alert(error.message);
           }
         } else {
-          const name = data.user?.user_metadata?.name || 'User';
-          router.push(`/p1su?name=${encodeURIComponent(name)}`);
+          // --- CONSTRAINT #2: Single Device Lock ---
+          try {
+            const { getDeviceId } = require('@/lib/device'); // Dynamic import for client-side safety
+            const currentDeviceId = getDeviceId();
+            const userId = data.user?.id;
+
+            // 1. Check Lock Status
+            const { data: profile, error: profileError } = await supabase
+              .from('profiles')
+              .select('active_device_id')
+              .eq('id', userId)
+              .single();
+
+            if (profile?.active_device_id && profile.active_device_id !== currentDeviceId) {
+              // LOCKED: Block Login
+              await supabase.auth.signOut();
+              alert(`🚫 LOGIN BLOCKED\n\nYou are already logged in on another device.\nPlease logout from the other device first.`);
+              setLoading(false);
+              return;
+            }
+
+            // 2. Lock this Device (or re-affirm lock)
+            await supabase
+              .from('profiles')
+              .upsert({
+                id: userId,
+                active_device_id: currentDeviceId,
+                last_active: new Date().toISOString()
+              });
+
+            // 3. Proceed
+            const name = data.user?.user_metadata?.name || 'User';
+            router.push(`/p1su?name=${encodeURIComponent(name)}`);
+
+          } catch (lockError) {
+            console.error('Lock Check Failed:', lockError);
+            alert('Security Check Failed. Please try again.');
+          }
         }
       }
       setLoading(false);
@@ -230,6 +266,13 @@ export default function Login() {
           {/* Sign Up Link */}
           <div className="signup-text">
             Not a user? <Link href="/signup" className="signup-link">Sign Up!</Link>
+          </div>
+
+          {/* Quick Dashboard Access */}
+          <div className="mt-8 text-center">
+              <Link href="/dashboard" className="text-xs text-gray-400 hover:text-gray-600 underline">
+                Go to Admin Dashboard
+              </Link>
           </div>
 
         </div>

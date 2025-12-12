@@ -48,7 +48,11 @@ export default function MenuPage() {
 
             <footer className="mt-auto py-8">
                 <button
-                    onClick={() => supabase.auth.signOut().then(() => router.push('/'))}
+                    onClick={async () => {
+                        const { error } = await supabase.from('profiles').update({ active_device_id: null }).eq('id', (await supabase.auth.getUser()).data.user?.id);
+                        await supabase.auth.signOut();
+                        router.push('/');
+                    }}
                     className="text-red-500 hover:text-red-400 underline text-sm"
                 >
                     Logout

@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
 import BackButton from '@/components/BackButton';
 import FaceScanner from '@/components/FaceScanner';
 import { loadEncryptedEmbeddings } from '@/lib/encryption';
@@ -14,6 +15,7 @@ interface RegisteredFace {
 }
 
 export default function CheckInPage() {
+    const router = useRouter();
     // Standard State
     const [faces, setFaces] = useState<RegisteredFace[]>([]);
 
@@ -22,6 +24,7 @@ export default function CheckInPage() {
     const [sessionId, setSessionId] = useState('');
     const [nonce, setNonce] = useState('');
     const [matchedName, setMatchedName] = useState('');
+    const [allocatedRoom, setAllocatedRoom] = useState<string | null>(null);
     const [verificationStatus, setVerificationStatus] = useState<'idle' | 'scanning' | 'success' | 'failed'>('idle');
 
     useEffect(() => {
@@ -70,8 +73,9 @@ export default function CheckInPage() {
 
         // B. Sign & Send to Server
         try {
-            const privateKey = await getPrivateKey();
+            // Fetch Public Key FIRST to ensure if regeneration happens, we get the fresh Private Key after.
             const publicKey = await getPublicKey();
+            const privateKey = await getPrivateKey();
 
             if (!privateKey || !publicKey) {
                 alert('Device keys missing! Go to Dashboard -> Auth.');
@@ -82,12 +86,26 @@ export default function CheckInPage() {
             const signature = await signNonce(privateKey, nonce);
 
             if (signature) {
-                const success = await sendVerification(signature, nonce, sessionId, publicKey);
+                const { success, error, room } = await sendVerification(signature, nonce, sessionId, publicKey, bestMatchName);
                 if (success) {
                     // Success!
+                    // Save Guest Session locally
+                    if (room) {
+                        localStorage.setItem('guest_room', room);
+                        setAllocatedRoom(room); // Keep state just in case
+                    }
+                    localStorage.setItem('guest_name', bestMatchName);
+                    localStorage.setItem('guest_session', sessionId);
+
                     setCheckinStep('complete');
+
+                    // Redirect to Guest Home
+                    setTimeout(() => {
+                        router.push('/guest');
+                    }, 1500);
+
                 } else {
-                    alert('❌ Server rejected signature.');
+                    alert(`❌ Verification Failed: ${error || 'Server rejected signature'}`);
                     setCheckinStep('scan-face');
                 }
             } else {
@@ -160,21 +178,13 @@ export default function CheckInPage() {
                 </div>
             )}
 
-            {/* Step 4: Success */}
+            {/* Step 4: Success -> Redirecting */}
             {checkinStep === 'complete' && (
                 <div className="text-center p-8 bg-green-100 rounded-lg flex flex-col items-center shadow-lg">
-                    <div className="text-5xl mb-4">✅</div>
+                    <div className="text-6xl mb-4">✅</div>
                     <h2 className="text-3xl font-bold text-green-700 mb-2">Check-in Confirmed!</h2>
-                    <p className="text-lg">Welcome, <strong>{matchedName}</strong>.</p>
-                    <div className="mt-4 p-2 bg-white/50 rounded font-mono text-sm text-gray-600">
-                        Session: {sessionId}
-                    </div>
-                    <button
-                        onClick={() => window.location.reload()}
-                        className="mt-6 px-6 py-2 bg-green-600 text-white rounded font-bold hover:bg-green-700"
-                    >
-                        Next Guest
-                    </button>
+                    <p className="text-lg">Redirecting to your Room Key...</p>
+                    <div className="animate-spin h-6 w-6 border-2 border-green-700 rounded-full border-t-transparent mt-4"></div>
                 </div>
             )}
 

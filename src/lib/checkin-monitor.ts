@@ -26,13 +26,15 @@ export const monitorCheckinStatus = (
         .on(
             'postgres_changes',
             {
-                event: 'INSERT',
+                event: 'UPDATE', // Listen for UPDATE, not INSERT (since we create it pending)
                 schema: 'public',
                 table: 'checkins',
                 filter: `session_id=eq.${sessionId}`
             },
             (payload) => {
-                onUpdate('verified', payload.new);
+                if (payload.new.status === 'verified') {
+                    onUpdate('verified', payload.new);
+                }
             }
         )
         .subscribe();
@@ -59,7 +61,7 @@ export const pollCheckinStatus = (
             .eq('session_id', sessionId)
             .single();
 
-        if (data && !error) {
+        if (data && !error && data.status === 'verified') {
             onStatusFound(data);
             clearInterval(interval);
         }
