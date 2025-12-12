@@ -65,7 +65,7 @@ export default function RegisterFacePage() {
             });
 
             if (res.ok) {
-                router.push('/dashboard');
+                router.push('/menu');
             } else {
                 console.error("Failed to update face status on server");
             }
