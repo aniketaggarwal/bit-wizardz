@@ -28,7 +28,7 @@ export default function DashboardPage() {
     // Load Stats
     useEffect(() => {
         const fetchStats = async () => {
-            const { count: guestCount } = await supabase.from('checkins').select('id', { count: 'exact' });
+            const { count: guestCount } = await supabase.from('checkins').select('id', { count: 'exact' }).neq('status', 'checked_out');
             const { count: roomCount } = await supabase.from('rooms').select('room_no', { count: 'exact' }).eq('status', 'occupied');
             setTotalGuests(guestCount || 0);
             setActiveRooms(roomCount || 0);
