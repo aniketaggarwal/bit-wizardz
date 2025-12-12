@@ -23,7 +23,7 @@ export default function P1SU() {
         if (dob && aadhaarLast4.length === 4) {
             // Proceed
             console.log('P1SU Details:', { name, dob, aadhaarLast4 });
-            router.push('/upload-aadhaar'); // Redirect to Upload Page
+            router.push('/upload-id'); // Redirect to Upload Page
         } else {
             alert("Please enter a valid DOB and the last 4 digits of your Aadhaar.");
         }

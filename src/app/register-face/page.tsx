@@ -135,6 +135,15 @@ export default function RegisterFacePage() {
                 )}
 
                 <div className="mt-8 pt-6 border-t font-mono text-xs text-center">
+                    {registeredFaces.length > 0 && (
+                        <button
+                            onClick={() => window.location.href = '/menu'}
+                            className="bg-blue-600 text-white px-6 py-2 rounded-lg font-bold text-lg mb-4 hover:bg-blue-700 w-full"
+                        >
+                            Go to Main Menu
+                        </button>
+                    )}
+
                     <button
                         onClick={async () => {
                             if (confirm('⚠️ Are you sure you want to WIPE ALL DATA? This cannot be undone.')) {
@@ -142,7 +151,7 @@ export default function RegisterFacePage() {
                                 window.location.reload();
                             }
                         }}
-                        className="text-red-500 hover:text-red-700 underline"
+                        className="text-red-500 hover:text-red-700 underline block mx-auto mt-4"
                     >
                         [Reset / Wipe All Data]
                     </button>

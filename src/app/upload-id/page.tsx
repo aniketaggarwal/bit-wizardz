@@ -1,85 +1,180 @@
 'use client';
 
-import { useState } from 'react';
-import BackButton from '@/components/BackButton';
+import { useState, useRef, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
 import { verifyAadhaarCard } from '@/lib/ocr-verification';
+import './upload-id.css';
 
 export default function UploadIDPage() {
+    const router = useRouter();
+    const fileInputRef = useRef<HTMLInputElement>(null);
+
+    // UI State
+    const [file, setFile] = useState<File | null>(null);
+    const [isDragActive, setIsDragActive] = useState(false);
+
+    // Logic State
     const [isScanning, setIsScanning] = useState(false);
     const [statusMatch, setStatusMatch] = useState<{ success: boolean; msg: string } | null>(null);
+    const [isVerified, setIsVerified] = useState(false);
 
-    const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
-        const file = e.target.files?.[0];
+    // 1. Handle File Selection (Merge Logic + UI)
+    const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        if (e.target.files && e.target.files[0]) {
+            setFile(e.target.files[0]);
+            setStatusMatch(null); // Reset status on new file
+        }
+    };
+
+    // 2. Drag & Drop Handlers
+    const handleDrag = (e: React.DragEvent) => {
+        e.preventDefault(); e.stopPropagation();
+        if (e.type === 'dragenter' || e.type === 'dragover') setIsDragActive(true);
+        else if (e.type === 'dragleave') setIsDragActive(false);
+    };
+
+    const handleDrop = (e: React.DragEvent) => {
+        e.preventDefault(); e.stopPropagation();
+        setIsDragActive(false);
+        if (e.dataTransfer.files && e.dataTransfer.files[0]) {
+            setFile(e.dataTransfer.files[0]);
+            setStatusMatch(null);
+        }
+    };
+
+    const handleClick = () => fileInputRef.current?.click();
+
+    // 3. Scan & Verify (The Logic)
+    const handleContinue = async () => {
         if (!file) return;
 
         setIsScanning(true);
         setStatusMatch(null);
 
         try {
-            // 1. Run Local OCR
             const result = await verifyAadhaarCard(file);
 
             if (result.success) {
-                setStatusMatch({ success: true, msg: `✅ Valid Aadhaar Detected! (Found: ${result.foundKeywords.join(', ')})` });
-                // TODO: Proceed to actual upload
+                // Success!
+                setStatusMatch({ success: true, msg: `✅ Valid Aadhaar!` });
+                setIsVerified(true); // Trigger UI Animation
             } else {
+                // Failed
                 setStatusMatch({
                     success: false,
-                    msg: `❌ Invalid Document. Could not find Aadhaar keywords. (Found: ${result.foundKeywords.length > 0 ? result.foundKeywords.join(', ') : 'None'})`
+                    msg: `❌ Invalid Document. Could not verify Aadhaar.`
                 });
             }
         } catch (error) {
             console.error(error);
-            setStatusMatch({ success: false, msg: '❌ OCR Failed. Please try a clearer image.' });
+            setStatusMatch({ success: false, msg: '❌ Scanning Failed. Try again.' });
         } finally {
             setIsScanning(false);
         }
     };
 
+    // 4. Auto-redirect on Success
+    useEffect(() => {
+        if (isVerified) {
+            const timer = setTimeout(() => {
+                router.push('/register-face');
+            }, 2000); // Wait for animation
+            return () => clearTimeout(timer);
+        }
+    }, [isVerified, router]);
+
     return (
-        <div className="min-h-screen flex flex-col items-center justify-center p-8 relative">
-            <BackButton />
-            <h1 className="text-2xl font-bold mb-4">Upload ID Proof</h1>
-            <p className="mb-4 text-gray-600">Please upload your Masked Aadhaar for verification.</p>
+        <main className="upload-container">
+            <div className="upload-card">
 
-            <div className={`border-2 border-dashed rounded-lg p-12 text-center transition-colors ${statusMatch?.success ? 'border-green-500 bg-green-50' :
-                    statusMatch?.success === false ? 'border-red-500 bg-red-50' :
-                        'border-gray-300'
-                }`}>
-
-                {isScanning ? (
-                    <div className="flex flex-col items-center">
-                        <div className="animate-spin h-8 w-8 border-4 border-blue-500 rounded-full border-t-transparent mb-4"></div>
-                        <p className="text-blue-600 font-bold animate-pulse">Scanning Document...</p>
-                        <p className="text-xs text-gray-500 mt-2">Checking for "Government of India", "Aadhaar", etc.</p>
+                {/* Header */}
+                {!isVerified && (
+                    <div className="upload-header">
+                        <button className="back-button" onClick={() => router.back()}>
+                            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M15 18l-6-6 6-6" /></svg>
+                        </button>
+                        <h1 className="upload-title">Upload Identity</h1>
                     </div>
-                ) : (
-                    <>
-                        <input
-                            type="file"
-                            className="hidden"
-                            id="id-upload"
-                            accept="image/*"
-                            onChange={handleFileUpload}
-                        />
-                        <label htmlFor="id-upload" className="cursor-pointer flex flex-col items-center">
-                            <span className="text-4xl mb-4">📄</span>
-                            <span className="text-blue-500 hover:text-blue-600 font-bold">
-                                {statusMatch ? 'Upload Another' : 'Click to Upload Aadhaar'}
-                            </span>
-                            <span className="text-xs text-gray-400 mt-2">Supports JPG, PNG</span>
-                        </label>
-                    </>
                 )}
-            </div>
 
-            {statusMatch && (
-                <div className={`mt-6 p-4 rounded text-center max-w-md ${statusMatch.success ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
-                    }`}>
-                    <p className="font-bold">{statusMatch.msg}</p>
-                    {statusMatch.success && <p className="text-xs mt-1">You may now proceed.</p>}
-                </div>
-            )}
-        </div>
+                {!isVerified ? (
+                    <>
+                        <p className="upload-subtitle">Please upload your masked Aadhaar card to verify your identity.</p>
+
+                        {/* Upload Zone */}
+                        {!file ? (
+                            <div
+                                className={`upload-zone ${isDragActive ? 'drag-active' : ''}`}
+                                onDragEnter={handleDrag}
+                                onDragLeave={handleDrag}
+                                onDragOver={handleDrag}
+                                onDrop={handleDrop}
+                                onClick={handleClick}
+                            >
+                                <input
+                                    type="file"
+                                    ref={fileInputRef}
+                                    onChange={handleFileChange}
+                                    style={{ display: 'none' }}
+                                    accept=".pdf,.jpg,.jpeg,.png"
+                                />
+                                <svg xmlns="http://www.w3.org/2000/svg" className="upload-icon" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                                    <path strokeLinecap="round" strokeLinejoin="round" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
+                                </svg>
+                                <div>
+                                    <p className="upload-text">Drag & drop or Click to browse</p>
+                                    <p className="upload-subtext">Supports PDF, JPG, PNG</p>
+                                </div>
+                            </div>
+                        ) : (
+                            /* File Preview State */
+                            <div className="upload-zone" style={{ padding: '20px', borderStyle: 'solid', borderColor: '#bfdbfe', background: '#eff6ff' }}>
+                                <div className="file-preview">
+                                    <svg xmlns="http://www.w3.org/2000/svg" className="file-icon" width="24" height="24" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                                        <path strokeLinecap="round" strokeLinejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                                    </svg>
+                                    <div className="file-info">
+                                        <p className="file-name">{file.name}</p>
+                                        <p className="file-size">{(file.size / 1024).toFixed(1)} KB</p>
+                                    </div>
+                                    <button className="remove-btn" onClick={() => { setFile(null); setStatusMatch(null); }}>
+                                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                                            <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+                                        </svg>
+                                    </button>
+                                </div>
+                            </div>
+                        )}
+
+                        {/* Error Message */}
+                        {statusMatch?.success === false && (
+                            <p className="text-red-500 font-bold text-sm bg-red-50 p-2 rounded border border-red-200">
+                                {statusMatch.msg}
+                            </p>
+                        )}
+
+                        <button
+                            className="continue-button"
+                            onClick={handleContinue}
+                            disabled={!file || isScanning}
+                        >
+                            {isScanning ? 'Verifying...' : 'Verify & Continue'}
+                        </button>
+                    </>
+                ) : (
+                    /* Success Animation */
+                    <div className="success-container">
+                        <div className="success-glow">
+                            <svg className="checkmark-svg" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 52 52">
+                                <circle className="checkmark-circle" cx="26" cy="26" r="25" fill="none" />
+                                <path className="checkmark-check" fill="none" d="M14.1 27.2l7.1 7.2 16.7-16.8" />
+                            </svg>
+                        </div>
+                        <h2 className="verified-text">Identity Verified!</h2>
+                    </div>
+                )}
+
+            </div>
+        </main>
     );
 }

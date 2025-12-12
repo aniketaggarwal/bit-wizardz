@@ -23,7 +23,7 @@ export default function Login() {
   const handleGoogleLogin = async () => {
     const { error } = await supabase.auth.signInWithOAuth({
       provider: "google",
-      options: { redirectTo: `${window.location.origin}/dashboard` },
+      options: { redirectTo: `${window.location.origin}/p1su` },
     });
     if (error) alert(error.message);
   };
@@ -50,7 +50,7 @@ export default function Login() {
           return;
         }
 
-        const { error } = await supabase.auth.signInWithPassword({
+        const { data, error } = await supabase.auth.signInWithPassword({
           email: contactInfo,
           password: password,
         });
@@ -64,7 +64,8 @@ export default function Login() {
             alert(error.message);
           }
         } else {
-          router.push("/dashboard");
+          const name = data.user?.user_metadata?.name || 'User';
+          router.push(`/p1su?name=${encodeURIComponent(name)}`);
         }
       }
       setLoading(false);
