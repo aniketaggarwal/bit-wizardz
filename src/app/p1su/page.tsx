@@ -23,7 +23,14 @@ export default function P1SU() {
         if (dob && aadhaarLast4.length === 4) {
             // Proceed
             console.log('P1SU Details:', { name, dob, aadhaarLast4 });
-            router.push('/upload-id'); // Redirect to Upload Page
+
+            // Format URL Params
+            const params = new URLSearchParams();
+            if (name) params.set('name', name);
+            if (dob) params.set('dob', dob);
+            if (aadhaarLast4) params.set('aadhaarLast4', aadhaarLast4);
+
+            router.push(`/upload-aadhaar?${params.toString()}`);
         } else {
             alert("Please enter a valid DOB and the last 4 digits of your Aadhaar.");
         }
@@ -55,8 +62,8 @@ export default function P1SU() {
                         type="text"
                         className="slick-input"
                         value={name}
-                        readOnly
-                        style={{ backgroundColor: '#f1f5f9', cursor: 'not-allowed' }}
+                        onChange={(e) => setName(e.target.value)}
+                        placeholder="Enter your full name"
                     />
                 </div>
 

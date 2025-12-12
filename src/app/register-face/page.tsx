@@ -1,10 +1,12 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
 import FaceScanner from '@/components/FaceScanner';
 import BackButton from '@/components/BackButton';
 import * as faceapi from 'face-api.js';
 import { saveEncryptedEmbedding, loadEncryptedEmbeddings, clearSecureStorage } from '@/lib/encryption';
+import { supabase } from '@/lib/supabase';
 
 // ... (existing imports)
 
@@ -18,6 +20,7 @@ interface RegisteredFace {
 }
 
 export default function RegisterFacePage() {
+    const router = useRouter();
     const [name, setName] = useState('');
     const [registeredFaces, setRegisteredFaces] = useState<RegisteredFace[]>([]);
     const [matchResult, setMatchResult] = useState<string>('');
@@ -38,6 +41,30 @@ export default function RegisterFacePage() {
         loadFaces();
     }, []);
 
+    const updateFaceStatus = async () => {
+        try {
+            const { data: { session } } = await supabase.auth.getSession();
+            const token = session?.access_token;
+            if (!token) return;
+
+            const res = await fetch('/api/face-verified', {
+                method: 'POST',
+                headers: {
+                    'Authorization': `Bearer ${token}`
+                }
+            });
+
+            if (res.ok) {
+                // Success - Redirect
+                router.push('/dashboard');
+            } else {
+                console.error("Failed to update face status on server");
+            }
+        } catch (e) {
+            console.error("API Call Error", e);
+        }
+    };
+
     const handleRegister = async (descriptor: Float32Array) => {
         if (!name) {
             alert('Please enter a name first');
@@ -48,6 +75,10 @@ export default function RegisterFacePage() {
             await saveEncryptedEmbedding(name, descriptor);
             setRegisteredFaces(prev => [...prev, { name, descriptor }]);
             alert(`Securely Registered ${name}`);
+
+            // Sync with Server
+            await updateFaceStatus();
+
             setName('');
             setMatchResult('');
         } catch (error) {
@@ -56,7 +87,7 @@ export default function RegisterFacePage() {
         }
     };
 
-    const handleVerify = (descriptor: Float32Array) => {
+    const handleVerify = async (descriptor: Float32Array) => {
         if (registeredFaces.length === 0) {
             alert('No faces registered yet');
             return;
@@ -69,6 +100,11 @@ export default function RegisterFacePage() {
 
         const match = faceMatcher.findBestMatch(descriptor);
         setMatchResult(match.toString()); // e.g. "Aniket (0.45)"
+
+        if (!match.toString().includes('unknown')) {
+            // Match Success
+            await updateFaceStatus();
+        }
     };
 
     return (

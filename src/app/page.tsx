@@ -64,8 +64,31 @@ export default function Login() {
             alert(error.message);
           }
         } else {
-          const name = data.user?.user_metadata?.name || 'User';
-          router.push(`/p1su?name=${encodeURIComponent(name)}`);
+          // Login Success - Check Identity Status
+          const { data: userData, error: userError } = await supabase
+            .from('users')
+            .select('identity_verified, face_verified')
+            .eq('id', data.user.id)
+            .single();
+
+          if (userError) {
+            // PGRST116 is "JSON object requested, multiple (or no) rows returned" - essentially Not Found for .single()
+            if (userError.code !== 'PGRST116') {
+              console.error("Fetch user error:", userError.message);
+            }
+            router.push("/p1su");
+          } else {
+            if (userData?.identity_verified) {
+              if (userData?.face_verified) {
+                router.push("/dashboard");
+              } else {
+                router.push("/register-face");
+              }
+            } else {
+              const name = data.user?.user_metadata?.name || 'User';
+              router.push(`/p1su?name=${encodeURIComponent(name)}`);
+            }
+          }
         }
       }
       setLoading(false);
