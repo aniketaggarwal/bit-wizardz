@@ -5,9 +5,10 @@ import { extractDescriptor, getEyeAspectRatio } from '@/lib/face-util';
 
 interface FaceScannerProps {
     onScan: (descriptor: Float32Array) => void;
+    onInstructionChange?: (instruction: string) => void;
 }
 
-export default function FaceScanner({ onScan }: FaceScannerProps) {
+export default function FaceScanner({ onScan, onInstructionChange }: FaceScannerProps) {
     const { videoRef, startCamera, isStreamActive, error: cameraError } = useCamera();
     const { isModelLoaded, isLoading: isModelsLoading } = useFaceApi();
 
@@ -110,30 +111,27 @@ export default function FaceScanner({ onScan }: FaceScannerProps) {
 
     return (
         <div className="flex flex-col items-center gap-4">
-            <div className="relative border-4 border-gray-800 rounded-lg overflow-hidden w-full max-w-md aspect-video bg-black">
-                <video
-                    ref={videoRef}
-                    autoPlay
-                    muted
-                    playsInline
-                    onLoadedMetadata={() => videoRef.current?.play()}
-                    className="w-full h-full object-cover transform scale-x-[-1]" // Mirror effect
-                />
+            {/* Webcam Container */}
+            <div className="luminous-border w-full max-w-xl aspect-[16/9] flex items-center justify-center shadow-2xl">
+                <div className="relative w-full h-full overflow-hidden rounded-xl bg-black z-10">
 
-                {/* Overlay UI */}
-                <div className="absolute top-4 left-0 right-0 text-center">
-                    <span className="bg-black/70 text-yellow-400 px-4 py-2 rounded-full text-lg font-bold border border-yellow-400">
-                        {instruction}
-                    </span>
-                </div>
+                    <video
+                        ref={videoRef}
+                        autoPlay
+                        muted
+                        playsInline
+                        onLoadedMetadata={() => videoRef.current?.play()}
+                        className="absolute w-full h-full object-cover transform scale-x-[-1]"
+                    />
 
-                <div className="absolute bottom-2 left-2 text-xs text-green-400 font-mono">
-                    {debugInfo}
+                    <div className="absolute bottom-4 left-4 text-xs text-green-400 font-mono z-50">
+                        {debugInfo}
+                    </div>
                 </div>
             </div>
 
             {status === 'scanned' && (
-                <button onClick={restart} className="px-4 py-2 bg-blue-600 text-white rounded">
+                <button onClick={restart} className="px-6 py-2 bg-blue-600 text-white rounded-full font-semibold shadow-lg hover:bg-blue-700 transition z-10">
                     Scan Again
                 </button>
             )}

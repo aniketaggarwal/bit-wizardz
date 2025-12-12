@@ -57,7 +57,7 @@ export default function UploadAadhaar() {
     useEffect(() => {
         if (isVerified) {
             const timer = setTimeout(() => {
-                router.push('/dashboard');
+                router.push('/register-face');
             }, 2500); // Wait for animation to finish + delay
             return () => clearTimeout(timer);
         }

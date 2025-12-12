@@ -1,12 +1,11 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
 import FaceScanner from '@/components/FaceScanner';
-import BackButton from '@/components/BackButton';
 import * as faceapi from 'face-api.js';
 import { saveEncryptedEmbedding, loadEncryptedEmbeddings, clearSecureStorage } from '@/lib/encryption';
-
-// ... (existing imports)
+import './face-scan.css';
 
 // ... inside component ...
 
@@ -18,6 +17,7 @@ interface RegisteredFace {
 }
 
 export default function RegisterFacePage() {
+    const router = useRouter();
     const [name, setName] = useState('');
     const [registeredFaces, setRegisteredFaces] = useState<RegisteredFace[]>([]);
     const [matchResult, setMatchResult] = useState<string>('');
@@ -70,94 +70,105 @@ export default function RegisterFacePage() {
         const match = faceMatcher.findBestMatch(descriptor);
         setMatchResult(match.toString()); // e.g. "Aniket (0.45)"
     };
+    const [instruction, setInstruction] = useState('Initializing Camera...');
 
     return (
-        <div className="min-h-screen flex flex-col items-center p-8 gap-6 relative">
-            <BackButton />
-            <h1 className="text-2xl font-bold mt-8">Face Recognition Playground (Test Mode)</h1>
+        <main className="min-h-screen w-full relative flex flex-col items-center justify-center overflow-hidden" style={{ backgroundColor: '#0a0e27' }}>
 
-            <div className="w-full max-w-md flex flex-col gap-4">
-                {/* Registration Section */}
-                <div className="p-4 bg-gray-100 rounded-lg">
-                    {registeredFaces.length === 0 ? (
-                        <>
-                            <h2 className="font-semibold mb-2">1. Register Owner</h2>
-                            <div className="flex gap-2 mb-2">
-                                <input
-                                    type="text"
-                                    placeholder="Enter Name"
-                                    className="border p-2 rounded flex-1 text-black placeholder-gray-500"
-                                    value={name}
-                                    onChange={e => setName(e.target.value)}
-                                />
-                            </div>
-                            <p className="text-sm text-gray-500">
-                                This will become the <strong>Sole Owner</strong> of this device.
-                            </p>
-                        </>
-                    ) : (
-                        <div className="bg-yellow-100 border-l-4 border-yellow-500 p-4 text-yellow-700 mx-auto">
-                            <p className="font-bold text-center">🔒 Device Locked</p>
-                            <p className="text-sm mt-1 text-center">
-                                This device is registered to: <br />
-                                <span className="font-bold text-lg">{registeredFaces[0].name}</span>
-                            </p>
-                            <p className="text-xs mt-2 text-center text-yellow-600">
-                                To register a new owner, you must wiping the device data below.
-                            </p>
+            {/* Background Image */}
+            <div
+                className="absolute inset-0 z-0 bg-cover bg-center"
+                style={{
+                    backgroundImage: "url('/background-webcam.jpg')",
+                    filter: "brightness(0.3)"
+                }}
+            />
+
+            {/* Centered Card Container */}
+            <div className="relative z-10 w-full max-w-2xl mx-auto p-6">
+
+                {/* White Card */}
+                <div className="bg-white rounded-3xl shadow-2xl p-8 space-y-6">
+
+                    <div className="face-scan-header">
+                        <button className="back-button" onClick={() => router.back()}>
+                            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M15 18l-6-6 6-6" /></svg>
+                        </button>
+                        <h1 className="face-scan-title">Face Scan</h1>
+                    </div>
+
+                    <p className="face-scan-instruction">{instruction}</p>
+
+                    <div className="scanner-wrapper">
+                        <FaceScanner
+                            onScan={(descriptor) => {
+                                if (registeredFaces.length === 0 && name) {
+                                    handleRegister(descriptor);
+                                } else {
+                                    handleVerify(descriptor);
+                                }
+                            }}
+                            onInstructionChange={setInstruction}
+                        />
+                    </div>
+
+                    {registeredFaces.length === 0 && (
+                        <div className="registration-input">
+                            <input
+                                type="text"
+                                placeholder="Enter Name to Register"
+                                value={name}
+                                onChange={e => setName(e.target.value)}
+                            />
                         </div>
                     )}
-                </div>
 
-                {/* Scanner - Dynamic Instruction */}
-                <FaceScanner onScan={(descriptor) => {
-                    if (registeredFaces.length === 0 && name) {
-                        handleRegister(descriptor);
-                    } else {
-                        handleVerify(descriptor);
-                    }
-                }} />
-
-                <div className="text-center text-lg text-black font-bold">
-                    {registeredFaces.length === 0 ? (
-                        <span>Type a name and press Scan to <span className="text-blue-600">Lock Device</span>.</span>
-                    ) : (
-                        <span>Scan Face to <span className="text-purple-600">Verify Identity</span>.</span>
+                    {/* Results */}
+                    {matchResult && (
+                        <div className={`
+                            px-6 py-4 rounded-xl font-bold text-xl text-center
+                            ${matchResult.includes('unknown')
+                                ? 'bg-red-100 text-red-700 border-2 border-red-300'
+                                : 'bg-green-100 text-green-700 border-2 border-green-300'}
+                        `}>
+                            {matchResult}
+                        </div>
                     )}
-                </div>
 
-                {/* Result */}
-                {matchResult && (
-                    <div className={`p-4 rounded-lg text-center font-bold text-xl ${matchResult.includes('unknown') ? 'bg-red-100 text-red-700' : 'bg-green-100 text-green-700'
-                        }`}>
-                        Result: {matchResult}
-                    </div>
-                )}
-
-                <div className="mt-8 pt-6 border-t font-mono text-xs text-center">
                     {registeredFaces.length > 0 && (
-                        <button
-                            onClick={() => window.location.href = '/menu'}
-                            className="bg-blue-600 text-white px-6 py-2 rounded-lg font-bold text-lg mb-4 hover:bg-blue-700 w-full"
-                        >
-                            Go to Main Menu
-                        </button>
+                        <div className="action-buttons">
+                            <button
+                                onClick={() => router.push('/menu')}
+                                className="btn-primary"
+                            >
+                                Dashboard
+                            </button>
+                            <button
+                                onClick={async () => {
+                                    if (confirm('Reset all identification data?')) {
+                                        await clearSecureStorage();
+                                        window.location.reload();
+                                    }
+                                }}
+                                className="btn-secondary"
+                            >
+                                Reset
+                            </button>
+                        </div>
                     )}
 
-                    <button
-                        onClick={async () => {
-                            if (confirm('⚠️ Are you sure you want to WIPE ALL DATA? This cannot be undone.')) {
-                                await clearSecureStorage();
-                                window.location.reload();
-                            }
-                        }}
-                        className="text-red-500 hover:text-red-700 underline block mx-auto mt-4"
-                    >
-                        [Reset / Wipe All Data]
-                    </button>
-                    <p className="mt-2 text-gray-400">Use this if you see decryption errors.</p>
                 </div>
+
+                {/* Back Button */}
+                <button
+                    onClick={() => window.history.back()}
+                    className="absolute top-0 left-6 text-white/80 hover:text-white transition flex items-center gap-2 text-sm"
+                >
+                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M19 12H5" /><path d="M12 19l-7-7 7-7" /></svg>
+                    Back
+                </button>
+
             </div>
-        </div>
+        </main>
     );
 }
