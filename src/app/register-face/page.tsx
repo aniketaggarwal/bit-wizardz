@@ -1,16 +1,12 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
 import FaceScanner from '@/components/FaceScanner';
-import BackButton from '@/components/BackButton';
 import * as faceapi from 'face-api.js';
 import { saveEncryptedEmbedding, loadEncryptedEmbeddings, clearSecureStorage } from '@/lib/encryption';
-
-// ... (existing imports)
-
-// ... inside component ...
-
-
+import { supabase } from '@/lib/supabase';
+import '../upload-aadhaar/upload.css';
 
 interface RegisteredFace {
     name: string;
@@ -18,146 +14,228 @@ interface RegisteredFace {
 }
 
 export default function RegisterFacePage() {
+    const router = useRouter();
+
+    // Core State
     const [name, setName] = useState('');
     const [registeredFaces, setRegisteredFaces] = useState<RegisteredFace[]>([]);
+
+    // Scan Flow State
+    const [scannedDescriptor, setScannedDescriptor] = useState<Float32Array | null>(null);
+    const [reviewMode, setReviewMode] = useState(false);
+    const [scannerKey, setScannerKey] = useState(0); // Used to reset the scanner component
+    const [instruction, setInstruction] = useState('Initializing Camera...');
     const [matchResult, setMatchResult] = useState<string>('');
     const [isLoading, setIsLoading] = useState(true);
 
-    // Load encrypted faces on mount
+    // Load Data on Mount
     useEffect(() => {
-        const loadFaces = async () => {
+        const init = async () => {
             try {
+                // 1. Load User Name form Session
+                const { data: { session } } = await supabase.auth.getSession();
+                if (session?.user) {
+                    const userName = session.user.user_metadata?.name || session.user.user_metadata?.full_name || '';
+                    if (userName) setName(userName);
+                }
+
+                // 2. Load Encrypted Faces
                 const faces = await loadEncryptedEmbeddings();
                 setRegisteredFaces(faces);
             } catch (error) {
-                console.error('Failed to load faces:', error);
+                console.error('Failed to init:', error);
             } finally {
                 setIsLoading(false);
             }
         };
-        loadFaces();
+        init();
     }, []);
 
-    const handleRegister = async (descriptor: Float32Array) => {
-        if (!name) {
-            alert('Please enter a name first');
-            return;
-        }
-
+    const updateFaceStatus = async () => {
         try {
-            await saveEncryptedEmbedding(name, descriptor);
-            setRegisteredFaces(prev => [...prev, { name, descriptor }]);
-            alert(`Securely Registered ${name}`);
-            setName('');
-            setMatchResult('');
-        } catch (error) {
-            console.error('Registration failed:', error);
-            alert('Failed to securely register face');
+            const { data: { session } } = await supabase.auth.getSession();
+            const token = session?.access_token;
+            if (!token) return;
+
+            const res = await fetch('/api/face-verified', {
+                method: 'POST',
+                headers: {
+                    'Authorization': `Bearer ${token}`
+                }
+            });
+
+            if (res.ok) {
+                router.push('/dashboard');
+            } else {
+                console.error("Failed to update face status on server");
+            }
+        } catch (e) {
+            console.error("API Call Error", e);
         }
     };
 
-    const handleVerify = (descriptor: Float32Array) => {
+    // Callback when FaceScanner detects a valid face (and pauses video)
+    const handleScanComplete = (descriptor: Float32Array) => {
+        setScannedDescriptor(descriptor);
+        setReviewMode(true);
+    };
+
+    // User clicked "Confirm Face"
+    const handleConfirm = async () => {
+        if (!scannedDescriptor) return;
+
         if (registeredFaces.length === 0) {
-            alert('No faces registered yet');
-            return;
+            // --- Registration Flow ---
+            if (!name) {
+                alert("Please enter a name first.");
+                return;
+            }
+            try {
+                await saveEncryptedEmbedding(name, scannedDescriptor);
+                setRegisteredFaces(prev => [...prev, { name, descriptor: scannedDescriptor }]);
+
+                // Sync with Server & Redirect
+                await updateFaceStatus();
+            } catch (error) {
+                console.error('Registration failed:', error);
+                alert('Failed to securely register face');
+            }
+        } else {
+            // --- Verification Flow ---
+            const faceMatcher = new faceapi.FaceMatcher(
+                registeredFaces.map(f => new faceapi.LabeledFaceDescriptors(f.name, [f.descriptor])),
+                0.6
+            );
+            const match = faceMatcher.findBestMatch(scannedDescriptor);
+            const resultStr = match.toString();
+            setMatchResult(resultStr);
+
+            if (!resultStr.includes('unknown')) {
+                await updateFaceStatus();
+            } else {
+                // If failed, stay in review mode but show error? 
+                // Alternatively, force retake.
+            }
         }
+    };
 
-        const faceMatcher = new faceapi.FaceMatcher(
-            registeredFaces.map(f => new faceapi.LabeledFaceDescriptors(f.name, [f.descriptor])),
-            0.6
-        );
-
-        const match = faceMatcher.findBestMatch(descriptor);
-        setMatchResult(match.toString()); // e.g. "Aniket (0.45)"
+    // User clicked "Retake"
+    const handleRetake = () => {
+        setReviewMode(false);
+        setScannedDescriptor(null);
+        setMatchResult('');
+        setScannerKey(prev => prev + 1); // This resets FaceScanner completely
     };
 
     return (
-        <div className="min-h-screen flex flex-col items-center p-8 gap-6 relative">
-            <BackButton />
-            <h1 className="text-2xl font-bold mt-8">Face Recognition Playground (Test Mode)</h1>
+        <main className="upload-container">
+            <div className="upload-card">
 
-            <div className="w-full max-w-md flex flex-col gap-4">
-                {/* Registration Section */}
-                <div className="p-4 bg-gray-100 rounded-lg">
-                    {registeredFaces.length === 0 ? (
-                        <>
-                            <h2 className="font-semibold mb-2">1. Register Owner</h2>
-                            <div className="flex gap-2 mb-2">
-                                <input
-                                    type="text"
-                                    placeholder="Enter Name"
-                                    className="border p-2 rounded flex-1 text-black placeholder-gray-500"
-                                    value={name}
-                                    onChange={e => setName(e.target.value)}
-                                />
-                            </div>
-                            <p className="text-sm text-gray-500">
-                                This will become the <strong>Sole Owner</strong> of this device.
-                            </p>
-                        </>
-                    ) : (
-                        <div className="bg-yellow-100 border-l-4 border-yellow-500 p-4 text-yellow-700 mx-auto">
-                            <p className="font-bold text-center">🔒 Device Locked</p>
-                            <p className="text-sm mt-1 text-center">
-                                This device is registered to: <br />
-                                <span className="font-bold text-lg">{registeredFaces[0].name}</span>
-                            </p>
-                            <p className="text-xs mt-2 text-center text-yellow-600">
-                                To register a new owner, you must wiping the device data below.
-                            </p>
-                        </div>
-                    )}
+                {/* Header */}
+                <div className="upload-header">
+                    <button className="back-button" onClick={() => router.back()}>
+                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M15 18l-6-6 6-6" /></svg>
+                    </button>
+                    <h1 className="upload-title">Face Verification</h1>
                 </div>
 
-                {/* Scanner - Dynamic Instruction */}
-                <FaceScanner onScan={(descriptor) => {
-                    if (registeredFaces.length === 0 && name) {
-                        handleRegister(descriptor);
-                    } else {
-                        handleVerify(descriptor);
+                <p className="upload-subtitle">
+                    {registeredFaces.length === 0
+                        ? (name ? `Registering face for: ${name}` : 'Register your face')
+                        : `Verifying identity for: ${name || 'User'}`
                     }
-                }} />
+                </p>
 
-                <div className="text-center text-lg text-black font-bold">
-                    {registeredFaces.length === 0 ? (
-                        <span>Type a name and press Scan to <span className="text-blue-600">Lock Device</span>.</span>
-                    ) : (
-                        <span>Scan Face to <span className="text-purple-600">Verify Identity</span>.</span>
-                    )}
+                {/* Scanner Section */}
+                <div style={{ position: 'relative', width: '100%', borderRadius: '12px', overflow: 'hidden', border: '1px solid #cbd5e1' }}>
+                    <FaceScanner
+                        key={scannerKey}
+                        onScan={handleScanComplete}
+                        onInstructionChange={setInstruction}
+                    />
                 </div>
 
-                {/* Result */}
-                {matchResult && (
-                    <div className={`p-4 rounded-lg text-center font-bold text-xl ${matchResult.includes('unknown') ? 'bg-red-100 text-red-700' : 'bg-green-100 text-green-700'
-                        }`}>
-                        Result: {matchResult}
+                {/* Instructions (Hidden when reviewing) */}
+                {!reviewMode && (
+                    <p style={{ textAlign: 'center', fontSize: '0.9rem', color: '#1e293b', fontWeight: 500, marginTop: '10px' }}>
+                        {instruction}
+                    </p>
+                )}
+
+                {/* Confirm / Retake Buttons */}
+                {reviewMode && (
+                    <div style={{ marginTop: '20px', display: 'flex', gap: '10px' }}>
+                        <button
+                            className="continue-button"
+                            style={{ backgroundColor: '#ef4444', marginTop: 0 }}
+                            onClick={handleRetake}
+                        >
+                            Retake
+                        </button>
+                        <button
+                            className="continue-button"
+                            style={{ backgroundColor: '#22c55e', marginTop: 0 }}
+                            onClick={handleConfirm}
+                        >
+                            Confirm Face
+                        </button>
                     </div>
                 )}
 
-                <div className="mt-8 pt-6 border-t font-mono text-xs text-center">
-                    {registeredFaces.length > 0 && (
-                        <button
-                            onClick={() => window.location.href = '/menu'}
-                            className="bg-blue-600 text-white px-6 py-2 rounded-lg font-bold text-lg mb-4 hover:bg-blue-700 w-full"
-                        >
-                            Go to Main Menu
-                        </button>
-                    )}
+                {/* Manual Name Input (Fallback) */}
+                {registeredFaces.length === 0 && !name && !reviewMode && (
+                    <div className="input-group" style={{ marginTop: '10px', textAlign: 'left' }}>
+                        <label className="input-label" style={{ fontSize: '0.9rem', color: '#64748b', marginBottom: '4px', display: 'block' }}>Your Name</label>
+                        <input
+                            type="text"
+                            placeholder="e.g. Aayush Makkar"
+                            value={name}
+                            onChange={e => setName(e.target.value)}
+                            style={{
+                                width: '100%',
+                                padding: '12px',
+                                borderRadius: '8px',
+                                border: '1px solid #cbd5e1',
+                                fontSize: '1rem',
+                                color: '#0f172a',
+                                outline: 'none',
+                                transition: 'border-color 0.2s'
+                            }}
+                        />
+                    </div>
+                )}
 
-                    <button
-                        onClick={async () => {
-                            if (confirm('⚠️ Are you sure you want to WIPE ALL DATA? This cannot be undone.')) {
-                                await clearSecureStorage();
-                                window.location.reload();
-                            }
-                        }}
-                        className="text-red-500 hover:text-red-700 underline block mx-auto mt-4"
-                    >
-                        [Reset / Wipe All Data]
-                    </button>
-                    <p className="mt-2 text-gray-400">Use this if you see decryption errors.</p>
-                </div>
+                {/* Error Result */}
+                {matchResult && matchResult.includes('unknown') && (
+                    <div className="bg-red-50 text-red-700 px-4 py-3 rounded-lg font-bold text-base text-center mt-2 border border-red-200">
+                        Face Not Recognized.
+                    </div>
+                )}
+
+                {/* Reset Option */}
+                {registeredFaces.length > 0 && (
+                    <div style={{ marginTop: '20px', borderTop: '1px solid #e2e8f0', paddingTop: '15px' }}>
+                        <button
+                            onClick={async () => {
+                                if (confirm('Reset all identification data?')) {
+                                    await clearSecureStorage();
+                                    window.location.reload();
+                                }
+                            }}
+                            style={{
+                                background: 'transparent',
+                                border: 'none',
+                                color: '#ef4444',
+                                fontSize: '0.85rem',
+                                cursor: 'pointer',
+                                textDecoration: 'underline'
+                            }}
+                        >
+                            Reset Device Data
+                        </button>
+                    </div>
+                )}
             </div>
-        </div>
+        </main>
     );
 }
