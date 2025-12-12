@@ -79,27 +79,39 @@ export default function RegisterFacePage() {
             <div className="w-full max-w-md flex flex-col gap-4">
                 {/* Registration Section */}
                 <div className="p-4 bg-gray-100 rounded-lg">
-                    <h2 className="font-semibold mb-2">1. Register</h2>
-                    <div className="flex gap-2 mb-2">
-                        <input
-                            type="text"
-                            placeholder="Enter Name"
-                            className="border p-2 rounded flex-1 text-black placeholder-gray-500"
-                            value={name}
-                            onChange={e => setName(e.target.value)}
-                        />
-                    </div>
-                    <p className="text-sm text-gray-500">
-                        {isLoading ? 'Loading secure storage...' : `Currently Registered: ${registeredFaces.length}`}
-                    </p>
-                    <ul className="text-sm list-disc pl-5 mt-2 max-h-32 overflow-y-auto">
-                        {registeredFaces.map((f, i) => <li key={i}>{f.name}</li>)}
-                    </ul>
+                    {registeredFaces.length === 0 ? (
+                        <>
+                            <h2 className="font-semibold mb-2">1. Register Owner</h2>
+                            <div className="flex gap-2 mb-2">
+                                <input
+                                    type="text"
+                                    placeholder="Enter Name"
+                                    className="border p-2 rounded flex-1 text-black placeholder-gray-500"
+                                    value={name}
+                                    onChange={e => setName(e.target.value)}
+                                />
+                            </div>
+                            <p className="text-sm text-gray-500">
+                                This will become the <strong>Sole Owner</strong> of this device.
+                            </p>
+                        </>
+                    ) : (
+                        <div className="bg-yellow-100 border-l-4 border-yellow-500 p-4 text-yellow-700 mx-auto">
+                            <p className="font-bold text-center">🔒 Device Locked</p>
+                            <p className="text-sm mt-1 text-center">
+                                This device is registered to: <br />
+                                <span className="font-bold text-lg">{registeredFaces[0].name}</span>
+                            </p>
+                            <p className="text-xs mt-2 text-center text-yellow-600">
+                                To register a new owner, you must wiping the device data below.
+                            </p>
+                        </div>
+                    )}
                 </div>
 
-                {/* Scanner */}
+                {/* Scanner - Dynamic Instruction */}
                 <FaceScanner onScan={(descriptor) => {
-                    if (name) {
+                    if (registeredFaces.length === 0 && name) {
                         handleRegister(descriptor);
                     } else {
                         handleVerify(descriptor);
@@ -107,8 +119,11 @@ export default function RegisterFacePage() {
                 }} />
 
                 <div className="text-center text-lg text-black font-bold">
-                    Type a name and press Scan to <span className="text-blue-600">Register</span>. <br />
-                    Leave name empty and press Scan to <span className="text-purple-600">Verify</span>.
+                    {registeredFaces.length === 0 ? (
+                        <span>Type a name and press Scan to <span className="text-blue-600">Lock Device</span>.</span>
+                    ) : (
+                        <span>Scan Face to <span className="text-purple-600">Verify Identity</span>.</span>
+                    )}
                 </div>
 
                 {/* Result */}
