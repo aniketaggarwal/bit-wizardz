@@ -8,6 +8,7 @@ import { loadEncryptedEmbeddings } from '@/lib/encryption';
 import { verifyFaceMatch } from '@/lib/face-util';
 import { getPrivateKey, getPublicKey } from '@/lib/auth-crypto';
 import { fetchNonce, signNonce, sendVerification } from '@/lib/checkin-auth';
+import '../login.css';
 
 interface RegisteredFace {
     name: string;
@@ -134,16 +135,117 @@ export default function CheckInPage() {
     };
 
     return (
-        <div className="min-h-screen flex flex-col items-center p-8 relative">
-            <BackButton />
-            <h1 className="text-2xl font-bold mb-8">Secure Check-in</h1>
+        <main
+            className="min-h-screen relative"
+            style={{
+                background: "linear-gradient(rgba(0,20,40,0.68), rgba(0,17,36,0.68)), url('/city-life.jpg')",
+                backgroundSize: 'cover',
+                backgroundPosition: 'center',
+                color: '#e6eef8',
+                overflow: 'hidden'
+            }}
+        >
+            <header className="top-header">
+                <div style={{ width: 120 }}></div>
+                <div className="header-brand">FastInn</div>
+                <div style={{ flex: 1, display: 'flex', justifyContent: 'center' }}>
+                    <div style={{ height: 40 }} />
+                </div>
+                <div style={{ width: 120, display: 'flex', justifyContent: 'flex-end', paddingRight: 24 }} />
+            </header>
 
-            {/* Stepper UI */}
-            <div className="flex gap-4 mb-8 text-sm">
-                <div className={`px-3 py-1 rounded ${checkinStep === 'scan-qr' ? 'bg-blue-600 text-white' : 'bg-gray-200'}`}>1. Scan QR</div>
-                <div className={`px-3 py-1 rounded ${checkinStep === 'scan-face' ? 'bg-blue-600 text-white' : 'bg-gray-200'}`}>2. Verify Face</div>
-                <div className={`px-3 py-1 rounded ${checkinStep === 'verifying-server' ? 'bg-blue-600 text-white' : 'bg-gray-200'}`}>3. Finalize</div>
-            </div>
+            <div className="w-full flex items-center justify-center" style={{ padding: '3.5rem 1rem' }}>
+                <div style={{ width: '100%', maxWidth: 1100 }}>
+                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 }}>
+                        <h1 style={{ fontSize: 28, fontWeight: 800, margin: 0 }}>Secure Check-in</h1>
+                        <BackButton />
+                    </div>
+
+                    {/* Step cards */}
+                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(280px,1fr))', gap: 14, marginBottom: 18 }}>
+                        {/* QR Card */}
+                        <div style={{ background: 'rgba(255,255,255,0.06)', padding: 18, borderRadius: 12, boxShadow: '0 10px 30px rgba(2,6,23,0.4)' }}>
+                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                                <div>
+                                    <div style={{ fontSize: 18, fontWeight: 800 }}>1. Scan Booking QR</div>
+                                    <div style={{ color: '#94a3b8', marginTop: 6, fontSize: 13 }}>Scan the QR or enter the session ID provided at the hotel desk.</div>
+                                </div>
+                                <div>
+                                    <button
+                                        onClick={handleQrScan}
+                                        style={checkinStep === 'scan-qr' ? { background: '#000', color: '#fff', padding: '10px 14px', borderRadius: 10, fontWeight: 800 } : { background: '#ffffff', color: '#000', padding: '10px 14px', borderRadius: 10, fontWeight: 800 }}
+                                    >
+                                        {checkinStep === 'scan-qr' ? 'Scan/Next' : 'Scan'}
+                                    </button>
+                                </div>
+                            </div>
+
+                            {checkinStep === 'scan-qr' && (
+                                <div style={{ marginTop: 12 }}>
+                                    <input
+                                        type="text"
+                                        placeholder="Simulate QR (Session ID)"
+                                        className="slick-input"
+                                        value={sessionId}
+                                        onChange={e => setSessionId(e.target.value)}
+                                    />
+                                    <p style={{ fontSize: 12, color: '#94a3b8', marginTop: 8 }}>In real life, this would automatically scan.</p>
+                                </div>
+                            )}
+                        </div>
+
+                        {/* Face Card */}
+                        <div style={{ background: 'rgba(255,255,255,0.04)', padding: 18, borderRadius: 12, boxShadow: '0 10px 30px rgba(2,6,23,0.35)' }}>
+                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                                <div>
+                                    <div style={{ fontSize: 18, fontWeight: 800 }}>2. Webcam Face Scan</div>
+                                    <div style={{ color: '#94a3b8', marginTop: 6, fontSize: 13 }}>Position your face in the frame and follow the on-screen guidance.</div>
+                                </div>
+                                <div>
+                                    <button
+                                        onClick={() => setCheckinStep('scan-face')}
+                                        style={checkinStep === 'scan-face' ? { background: '#000', color: '#fff', padding: '10px 14px', borderRadius: 10, fontWeight: 800 } : { background: '#ffffff', color: '#000', padding: '10px 14px', borderRadius: 10, fontWeight: 800 }}
+                                    >
+                                        {checkinStep === 'scan-face' ? 'Start Scan' : 'Open'}
+                                    </button>
+                                </div>
+                            </div>
+
+                            {checkinStep === 'scan-face' && (
+                                <div style={{ marginTop: 12 }}>
+                                    <FaceScanner onScan={handleFaceScan} />
+                                    <p style={{ marginTop: 8, fontWeight: 700, textAlign: 'center' }}>{verificationStatus === 'success' ? `Hello, ${matchedName}!` : 'Look at the camera...'}</p>
+                                </div>
+                            )}
+                        </div>
+
+                        {/* Finalize Card */}
+                        <div style={{ background: 'rgba(255,255,255,0.04)', padding: 18, borderRadius: 12, boxShadow: '0 10px 30px rgba(2,6,23,0.32)' }}>
+                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                                <div>
+                                    <div style={{ fontSize: 18, fontWeight: 800 }}>3. Finalize</div>
+                                    <div style={{ color: '#94a3b8', marginTop: 6, fontSize: 13 }}>After successful scan, we process verification and provide your room key.</div>
+                                </div>
+                                <div>
+                                    <button
+                                        onClick={() => setCheckinStep('verifying-server')}
+                                        style={checkinStep === 'verifying-server' ? { background: '#000', color: '#fff', padding: '10px 14px', borderRadius: 10, fontWeight: 800 } : { background: '#ffffff', color: '#000', padding: '10px 14px', borderRadius: 10, fontWeight: 800 }}
+                                    >
+                                        {checkinStep === 'verifying-server' ? 'Processing' : 'Finalize'}
+                                    </button>
+                                </div>
+                            </div>
+
+                            {checkinStep === 'verifying-server' && (
+                                <div style={{ marginTop: 12 }}>
+                                    <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                                        <div className="animate-spin h-6 w-6 border-2 border-blue-500 rounded-full border-t-transparent"></div>
+                                        <div style={{ color: '#c7d2fe' }}>Verifying with Server...</div>
+                                    </div>
+                                </div>
+                            )}
+                        </div>
+                    </div>
 
             {/* Step 1: QR Input (Simulation) */}
             {checkinStep === 'scan-qr' && (
@@ -202,6 +304,8 @@ export default function CheckInPage() {
                 </div>
             )}
 
-        </div>
+                </div>
+            </div>
+        </main>
     );
 }

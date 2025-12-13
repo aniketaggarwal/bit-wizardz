@@ -39,7 +39,8 @@ body {
   /* display: flex; -> Commented to allow Next.js routing structure */
   /* justify-content: center; */
   /* align-items: center; */
-  overflow-x: hidden; /* Changed from overflow: hidden to allow scrolling if needed */
+  overflow-x: hidden;
+  /* Changed from overflow: hidden to allow scrolling if needed */
 }
 
 /* App Structure */
@@ -281,4 +282,41 @@ video {
   right: 10px;
   border-left: none;
   border-top: none;
+}
+
+/* Luminous Moving Border */
+@keyframes borderRotate {
+  0% {
+    background-position: 0% 50%;
+  }
+
+  50% {
+    background-position: 100% 50%;
+  }
+
+  100% {
+    background-position: 0% 50%;
+  }
+}
+
+.luminous-border {
+  position: relative;
+  border-radius: 1rem;
+  /* Match container radius */
+  padding: 8px;
+  /* Thicker border */
+  background: linear-gradient(90deg, #06b6d4, #22d3ee, #ffffff, #22d3ee, #06b6d4);
+  background-size: 300% 300%;
+  animation: borderRotate 3s ease infinite;
+  box-shadow: 0 0 15px #22d3ee, 0 0 30px #06b6d4;
+}
+
+.luminous-border::after {
+  content: "";
+  position: absolute;
+  inset: 8px;
+  background: black;
+  /* Inner bg */
+  border-radius: 0.8rem;
+  z-index: 0;
 }

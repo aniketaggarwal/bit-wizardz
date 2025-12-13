@@ -144,6 +144,7 @@ export default function Login() {
       phone: `+91${contactInfo}`,
       token: otpValue,
       type: 'sms',
+      is_mobile: false // Actually, type='sms' handles it
     });
 
     if (error) {
@@ -279,8 +280,6 @@ export default function Login() {
           <div className="signup-text">
             Not a user? <Link href="/signup" className="signup-link">Sign Up!</Link>
           </div>
-
-
 
           {/* Quick Dashboard Access (Protected) */}
           <div className="mt-8 text-center">

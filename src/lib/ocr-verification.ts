@@ -13,11 +13,6 @@ const REQUIRED_KEYWORDS = [
 ];
 
 /**
- * Verifies if the uploaded image contains Masked Aadhaar keywords.
- * @param file The image file to scan
- * @returns { success: boolean, text: string, foundKeywords: string[] }
- */
-/**
  * Verifies if the uploaded image contains Masked Aadhaar keywords AND matches user details.
  * @param file The image file to scan
  * @param expectedDetails Optional: Expected Name, DOB, and Last 4 digits to verify ownership

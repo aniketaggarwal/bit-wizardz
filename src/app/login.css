@@ -301,3 +301,99 @@
     background: #1e293b;
     box-shadow: 0 4px 12px rgba(15, 23, 42, 0.15);
 }
+
+/* Menu button inner border glow on hover (turquoise) */
+.menu-button {
+    position: relative;
+    overflow: visible;
+    border-radius: 12px;
+}
+.menu-button::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    border-radius: 12px;
+    pointer-events: none;
+    transition: box-shadow 180ms ease, opacity 180ms ease;
+    box-shadow: inset 0 0 0 0 rgba(64,224,208,0);
+}
+.menu-button:hover::after {
+    box-shadow: inset 0 0 0 3px rgba(64,224,208,0.95);
+}
+
+/* Slightly lift on hover while keeping pastel look */
+.menu-button:hover {
+    transform: translateY(-4px);
+    transition: transform 160ms ease;
+}
+
+/* Make translucent style a bit smoother */
+.menu-button {
+    transition: transform 160ms ease, background 160ms ease, box-shadow 160ms ease;
+}
+
+/* Header bar styles */
+.top-header {
+    position: sticky;
+    top: 0;
+    z-index: 60;
+    height: 64px; /* ~1 inch */
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    background: rgba(2,6,23,0.6);
+    color: #e6eef8;
+}
+.header-brand {
+    font-family: 'Cooper Black', 'Brush Script MT', cursive;
+    color: #40E0D0; /* turquoise */
+    font-size: 22px;
+    font-weight: 700;
+    margin-left: 8px;
+}
+.header-cta {
+    background: #ffffff;
+    border: 1px solid rgba(0,0,0,0.08);
+    color: #000000;
+    padding: 8px 12px;
+    border-radius: 8px;
+    cursor: pointer;
+    font-weight: 800;
+}
+
+.profile-avatar-wrapper { position: relative; }
+.profile-avatar { width: 44px; height: 44px; border-radius: 9999px; overflow: hidden; border: 1px solid rgba(64,224,208,0.9); box-shadow: 0 0 8px rgba(255,165,0,0.18), 0 0 6px rgba(64,224,208,0.08); display:flex; align-items:center; justify-content:center; cursor:default; background: linear-gradient(180deg, rgba(255,255,255,0.06), rgba(255,255,255,0.02)); }
+.avatar-letter { color:#e6eef8; font-weight:800; font-size:18px; }
+.profile-avatar img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.profile-popup { position: absolute; right: 0; top: calc(100% + 8px); background: rgba(2,6,23,0.98); padding: 8px; border-radius: 8px; min-width: 160px; box-shadow: 0 10px 30px rgba(2,6,23,0.6); display: flex; flex-direction: column; gap: 6px; }
+.profile-popup-item { background: transparent; border: none; color: #e6eef8; padding: 8px 10px; text-align: left; cursor: pointer; border-radius: 6px; }
+.profile-popup-item:hover { background: rgba(255,255,255,0.03); }
+.profile-logout-inline { color: #ef4444; font-weight: 700; }
+
+/* Modal overlay */
+.modal-overlay { position: fixed; inset: 0; background: linear-gradient(rgba(2,6,23,0.6), rgba(2,6,23,0.6)); display: flex; align-items: center; justify-content: center; z-index: 80; backdrop-filter: blur(4px); }
+.modal-card { background: linear-gradient(180deg,#ffffff 0%, #f8fafc 100%); padding: 28px; border-radius: 16px; min-width: 420px; max-width: 720px; text-align: center; box-shadow: 0 40px 80px rgba(2,6,23,0.6); border: 1px solid rgba(2,6,23,0.06); }
+.modal-card h2 { margin: 0 0 8px 0; font-size: 22px; }
+.modal-card p { color: #475569; margin-bottom: 18px; }
+.modal-actions { display: flex; gap: 12px; justify-content: center; }
+.modal-btn { background: #000; border: none; padding: 12px 18px; border-radius: 10px; color: #fff; font-weight: 800; cursor: pointer; min-width: 96px; }
+.modal-btn + .modal-btn { margin-left: 8px; }
+.modal-btn--yes { color: #dc2626; }
+.modal-btn--no { color: #16a34a; }
+
+/* Compact logout button shown in profile dropdown */
+.profile-logout-button {
+    padding: 8px 12px;
+    border-radius: 10px;
+    font-size: 0.95rem;
+    font-weight: 700;
+    width: 100%;
+    box-shadow: none;
+    border: 1px solid #e6eef8;
+    background: #ffffff; /* white background like other buttons */
+    color: #dc2626; /* red text */
+}
+.profile-logout-button:hover {
+    transform: translateY(-3px);
+    background: #fbfbfc; /* slight hover tint */
+}

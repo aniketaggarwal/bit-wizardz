@@ -57,7 +57,7 @@ export default function RegisterFacePage() {
         try {
             const { data: { user } } = await supabase.auth.getUser();
             if (user) {
-                // Direct Supabase Update (Replica of previous fix)
+                // Direct Supabase Update
                 await supabase.from('users').update({
                     face_verified: true,
                     updated_at: new Date().toISOString()
@@ -147,12 +147,7 @@ export default function RegisterFacePage() {
                     <FaceScanner
                         key={scannerKey}
                         onScan={handleScanComplete}
-                    // onInstructionChange={setInstruction} // Removed if FaceScanner doesn't support it in this branch version, checking component...
-                    // Actually, looking at FaceScanner.tsx I read earlier, it DOES NOT seem to have onInstructionChange prop!
-                    // The 'temp' file had it. The 'FaceScanner.tsx' I read earlier might be different?
-                    // Let's re-read FaceScanner.tsx to be safe. 
-                    // Wait, I read FaceScanner.tsx in Step 2408. It has `interface FaceScannerProps { onScan: (descriptor: Float32Array) => void; }`
-                    // So I should REMOVE onInstructionChange.
+                        onInstructionChange={setInstruction}
                     />
                 </div>
 
