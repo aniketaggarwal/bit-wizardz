@@ -82,7 +82,7 @@ function UploadContent() {
             const result = await verifyAadhaarCard(file, {
                 name: expectedDetails.name,
                 dob: formattedDob,
-                aadhaarLast4: expectedDetails.aadhaarLast4
+                last4: expectedDetails.aadhaarLast4
             });
 
             if (result.success) {
@@ -98,9 +98,9 @@ function UploadContent() {
                             'Authorization': `Bearer ${token}`
                         },
                         body: JSON.stringify({
-                            dob: result.extracted.dob, // Or use formattedDob if standardized
+                            dob: formattedDob,
                             aadhaarLast4: expectedDetails.aadhaarLast4,
-                            id_masked: result.extracted.aadhaar // "XXXX XXXX 1234"
+                            id_masked: `XXXX XXXX ${expectedDetails.aadhaarLast4}`
                         })
                     });
 
