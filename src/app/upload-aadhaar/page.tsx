@@ -110,7 +110,10 @@ function UploadContent() {
                     }
 
                     setStatus('success');
-                    setExtractedData(result.extracted);
+                    setExtractedData({
+                        dob: formattedDob,
+                        aadhaar: `XXXX XXXX ${expectedDetails.aadhaarLast4}`
+                    });
                 } catch (apiErr: any) {
                     console.error("API Error Details:", apiErr);
                     setStatus('failed');
