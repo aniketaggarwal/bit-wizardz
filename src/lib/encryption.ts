@@ -128,7 +128,7 @@ export const saveEncryptedEmbedding = async (name: string, descriptor: Float32Ar
             name,
             encryptedData: {
                 cipherText: arrayBufferToBase64(encrypted.cipherText),
-                iv: arrayBufferToBase64(encrypted.iv.buffer)
+                iv: arrayBufferToBase64(encrypted.iv.buffer as any)
             },
             timestamp: Date.now(),
         };
