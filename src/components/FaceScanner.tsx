@@ -9,7 +9,7 @@ interface FaceScannerProps {
 }
 
 export default function FaceScanner({ onScan, onInstructionChange }: FaceScannerProps) {
-    const { videoRef, startCamera, isStreamActive, error: cameraError } = useCamera();
+    const { videoRef, startCamera, stopCamera, isStreamActive, error: cameraError } = useCamera();
     const { isModelLoaded, isLoading: isModelsLoading } = useFaceApi();
 
     const [status, setStatus] = useState<'idle' | 'detecting' | 'blink-detected' | 'scanned'>('idle');
@@ -77,8 +77,8 @@ export default function FaceScanner({ onScan, onInstructionChange }: FaceScanner
                         setStatus('scanned');
                         setInstruction('Scan Complete!');
 
-                        // Freeze Frame
-                        videoRef.current?.pause();
+                        // Stop Camera Stream Immediately
+                        stopCamera();
 
                         onScan(descriptor);
                         stopScanningLoop();

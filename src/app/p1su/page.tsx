@@ -3,253 +3,226 @@
 import { useState, useEffect } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
 import { supabase } from '@/lib/supabase';
-import '../signup/signup.css'; // Reusing styling from Signup
+import '../signup/signup.css';
 
 export default function P1SU() {
     const router = useRouter();
     const searchParams = useSearchParams();
 
+    // Form State
     const [name, setName] = useState('');
     const [dob, setDob] = useState('');
-    const [aadhaarLast4, setAadhaarLast4] = useState('');
+    const [aadhaar, setAadhaar] = useState('');
 
-    // Phone & OTP State
+    // Phone Authentication State
     const [phone, setPhone] = useState('');
     const [otp, setOtp] = useState('');
-    const [isPhoneValid, setIsPhoneValid] = useState(false);
     const [otpSent, setOtpSent] = useState(false);
-    const [isPhoneVerified, setIsPhoneVerified] = useState(false);
-    const [isLoading, setIsLoading] = useState(false);
+    const [phoneVerified, setPhoneVerified] = useState(false);
+    const [loading, setLoading] = useState(false);
 
+    // Initial Load & Auth Check
     useEffect(() => {
         const nameParam = searchParams.get('name');
-        if (nameParam) {
-            setName(nameParam);
-        }
+        if (nameParam) setName(nameParam);
 
-        // Check if already verified
-        const checkExistingProfile = async () => {
+        const checkProfile = async () => {
             const { data: { user } } = await supabase.auth.getUser();
             if (user) {
-                const { data: profile } = await supabase
-                    .from('users')
-                    .select('id_last4')
-                    .eq('id', user.id)
-                    .single();
+                // If user already has a valid profile (checked by ID presence), redirect
+                const { data } = await supabase.from('users').select('id_last4').eq('id', user.id).single();
+                if (data?.id_last4) router.replace('/menu');
 
-                if (profile?.id_last4) {
-                    router.replace('/menu'); // Redirect if already setup
+                // Pre-fill phone if available from Google Auth
+                if (user.phone) {
+                    setPhone(user.phone.replace('+91', ''));
+                    setPhoneVerified(true);
                 }
             }
         };
-        checkExistingProfile();
+        checkProfile();
     }, [searchParams, router]);
 
+    // Handlers
     const handleSendOtp = async () => {
-        if (!isPhoneValid) return;
-        setIsLoading(true);
+        if (!phone || phone.length < 10) return alert('Enter valid mobile number');
+        setLoading(true);
         try {
-            // Using updateUser triggers a 'phone_change' OTP for logged-in users
-            const { error } = await supabase.auth.updateUser({ phone: `+91${phone}` });
-            if (error) throw error;
-
-            setOtpSent(true);
-            alert('OTP sent to +91 ' + phone);
-        } catch (error: any) {
-            console.error('Error sending OTP:', error);
-            alert(error.message || 'Failed to send OTP.');
+            const res = await fetch('/api/otp', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ action: 'send', phone: `+91${phone}` })
+            });
+            const data = await res.json();
+            if (data.success) {
+                setOtpSent(true);
+                alert(`OTP Sent to +91 ${phone}`);
+            } else {
+                throw new Error(data.error);
+            }
+        } catch (e: any) {
+            alert(e.message || 'Failed to send OTP');
         } finally {
-            setIsLoading(false);
+            setLoading(false);
         }
     };
 
     const handleVerifyOtp = async () => {
-        if (otp.length !== 6) return;
-        setIsLoading(true);
+        if (!otp) return alert('Enter OTP');
+        setLoading(true);
         try {
-            const { error } = await supabase.auth.verifyOtp({
-                phone: `+91${phone}`,
-                token: otp,
-                type: 'phone_change'
+            const res = await fetch('/api/otp', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ action: 'verify', phone: `+91${phone}`, token: otp })
             });
-            if (error) throw error;
-
-            setIsPhoneVerified(true);
-            alert('Phone Number Verified Successfully! ✅');
-        } catch (error: any) {
-            console.error('Error verifying OTP:', error);
-            alert(error.message || 'Invalid OTP. Please try again.');
+            const data = await res.json();
+            if (data.success) {
+                setPhoneVerified(true);
+                alert('Phone Verified Successfully!');
+            } else {
+                throw new Error(data.error);
+            }
+        } catch (e: any) {
+            alert(e.message || 'Invalid OTP');
         } finally {
-            setIsLoading(false);
+            setLoading(false);
         }
     };
 
     const handleContinue = async () => {
-        if (dob && aadhaarLast4.length === 4 && isPhoneVerified) {
-            try {
-                const { data: { user } } = await supabase.auth.getUser();
-                if (user) {
-                    const { error } = await supabase.from('users').upsert({
-                        id: user.id,
-                        name: name,
-                        email: user.email, // Save Email from Auth
-                        id_last4: aadhaarLast4,
-                        dob: dob,
-                        phone: user.phone || `+91${phone}`, // Use verified phone from Auth or state
-                        updated_at: new Date().toISOString()
-                    });
-                    if (error) throw error;
-                }
-                router.push('/upload-id');
-            } catch (error) {
-                console.error('Error saving profile:', error);
-                alert('Failed to save details. Please try again.');
-            }
-        } else {
-            alert("Please verify your Phone Number and fill all details.");
-        }
-    };
+        if (!name || !dob || !aadhaar) return alert('Please fill all details');
+        if (!phoneVerified) return alert('Please verify phone number first');
 
-    const handleAadhaarChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-        const val = e.target.value;
-        if (/^\d*$/.test(val) && val.length <= 4) {
-            setAadhaarLast4(val);
-        }
-    };
+        setLoading(true);
+        try {
+            const { data: { user } } = await supabase.auth.getUser();
+            if (!user) throw new Error('No authenticated user found');
 
-    const handlePhoneChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-        if (isPhoneVerified) return; // Lock if already verified
-        const val = e.target.value.replace(/\D/g, '');
-        if (val.length <= 10) {
-            setPhone(val);
-            setIsPhoneValid(val.length === 10);
-            setOtpSent(false); // Reset if number changes
+            const { error } = await supabase.from('users').upsert({
+                id: user.id,
+                name,
+                email: user.email,
+                dob,
+                id_last4: aadhaar.slice(-4), // Storing last 4 for reference
+                phone: `+91${phone}`,
+                updated_at: new Date().toISOString()
+            });
+
+            if (error) throw error;
+            router.push('/upload-id');
+
+        } catch (e: any) {
+            console.error(e);
+            alert('Failed to save profile: ' + e.message);
+        } finally {
+            setLoading(false);
         }
     };
 
     return (
         <main className="signup-container">
-            <div className="signup-card">
-
-                {/* Header */}
+            <div className="signup-card animate-fadeIn">
                 <div className="signup-header">
-                    <button className="back-button" onClick={() => router.back()}>
-                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M15 18l-6-6 6-6" /></svg>
+                    <button onClick={() => router.back()} className="back-button">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M15 18l-6-6 6-6" /></svg>
                     </button>
-                    <h1 className="signup-title">Enter Details</h1>
+                    <h1 className="signup-title">Setup Profile</h1>
                 </div>
 
-                {/* Name (Editable) */}
+                {/* Name */}
                 <div className="input-group">
                     <label className="input-label">Full Name</label>
                     <input
-                        type="text"
                         className="slick-input"
                         value={name}
-                        onChange={(e) => setName(e.target.value)}
+                        onChange={e => setName(e.target.value)}
                         placeholder="e.g. John Doe"
                     />
                 </div>
 
-                {/* DOB */}
-                <div className="input-group">
-                    <label className="input-label">Date of Birth</label>
-                    <input
-                        type="date"
-                        className="slick-input"
-                        value={dob}
-                        onChange={(e) => setDob(e.target.value)}
-                    />
-                </div>
-
-                {/* Aadhaar Last 4 */}
-                <div className="input-group">
-                    <label className="input-label">Aadhaar (Last 4 Digits)</label>
-                    <input
-                        type="password"
-                        className="slick-input"
-                        placeholder="XXXX"
-                        maxLength={4}
-                        value={aadhaarLast4}
-                        onChange={handleAadhaarChange}
-                        inputMode="numeric"
-                        style={{ letterSpacing: '4px' }}
-                    />
-                </div>
-
-                {/* Phone Number */}
-                <div className="input-group">
-                    <label className="input-label">Phone Number {isPhoneVerified && '✅'}</label>
-                    <div style={{ display: 'flex', gap: '8px' }}>
-                        <span style={{ padding: '12px', background: '#e2e8f0', borderRadius: '8px', color: '#64748b' }}>+91</span>
+                {/* DOB & Aadhaar */}
+                <div className="grid grid-cols-2 gap-4">
+                    <div className="input-group">
+                        <label className="input-label">Date of Birth</label>
                         <input
-                            type="tel"
+                            type="date"
                             className="slick-input"
-                            placeholder="9876543210"
-                            maxLength={10}
-                            value={phone}
-                            onChange={handlePhoneChange}
-                            inputMode="numeric"
-                            disabled={isPhoneVerified}
-                            style={{ flex: 1, backgroundColor: isPhoneVerified ? '#f0fdf4' : 'white' }}
+                            value={dob}
+                            onChange={e => setDob(e.target.value)}
+                        />
+                    </div>
+                    <div className="input-group">
+                        <label className="input-label">Aadhaar No.</label>
+                        <input
+                            type="text"
+                            className="slick-input"
+                            value={aadhaar}
+                            onChange={e => setAadhaar(e.target.value.replace(/\D/g, '').slice(0, 12))}
+                            placeholder="12-digit UID"
                         />
                     </div>
                 </div>
 
-                {/* Send OTP Button */}
-                {isPhoneValid && !otpSent && !isPhoneVerified && (
-                    <button
-                        className="signup-button"
-                        onClick={handleSendOtp}
-                        disabled={isLoading}
-                        style={{ backgroundColor: '#3b82f6', marginTop: '0px', marginBottom: '16px' }}
-                    >
-                        {isLoading ? 'Sending...' : 'Send OTP'}
-                    </button>
-                )}
+                {/* Phone Section */}
+                <div className="input-group">
+                    <label className="input-label">Mobile Number {phoneVerified && '✅'}</label>
+                    <div className="flex gap-2">
+                        <input
+                            type="tel"
+                            className="slick-input flex-1"
+                            value={phone}
+                            onChange={e => {
+                                if (!phoneVerified) setPhone(e.target.value.replace(/\D/g, '').slice(0, 10));
+                            }}
+                            placeholder="9876543210"
+                            disabled={phoneVerified || otpSent}
+                        />
+                        {!phoneVerified && !otpSent && (
+                            <button
+                                onClick={handleSendOtp}
+                                disabled={phone.length < 10 || loading}
+                                className="px-3 bg-blue-600/20 text-blue-300 border border-blue-500/50 rounded hover:bg-blue-600/40 transition-colors text-sm font-bold"
+                            >
+                                {loading ? '...' : 'Send OTP'}
+                            </button>
+                        )}
+                    </div>
+                </div>
 
-                {/* OTP Input & Verify */}
-                {otpSent && !isPhoneVerified && (
-                    <div className="input-group animate-fade-in" style={{ marginTop: '0' }}>
+                {/* OTP Input */}
+                {otpSent && !phoneVerified && (
+                    <div className="input-group animate-slideUp">
                         <label className="input-label">Enter OTP</label>
-                        <div style={{ display: 'flex', gap: '8px' }}>
+                        <div className="flex gap-2">
                             <input
                                 type="text"
-                                className="slick-input"
-                                placeholder="123456"
-                                maxLength={6}
+                                className="slick-input flex-1 text-center tracking-[0.5em] font-mono text-lg"
                                 value={otp}
-                                onChange={(e) => setOtp(e.target.value.replace(/\D/g, ''))}
-                                inputMode="numeric"
-                                style={{ letterSpacing: '4px', textAlign: 'center' }}
+                                onChange={e => setOtp(e.target.value.replace(/\D/g, '').slice(0, 6))}
+                                placeholder="------"
                             />
                             <button
                                 onClick={handleVerifyOtp}
-                                disabled={otp.length !== 6 || isLoading}
-                                style={{
-                                    padding: '0 20px',
-                                    borderRadius: '8px',
-                                    backgroundColor: otp.length === 6 ? '#22c55e' : '#cbd5e1',
-                                    color: 'white',
-                                    fontWeight: 'bold',
-                                    border: 'none',
-                                    cursor: otp.length === 6 ? 'pointer' : 'not-allowed'
-                                }}
+                                disabled={otp.length < 6 || loading}
+                                className="px-4 bg-green-600/20 text-green-300 border border-green-500/50 rounded hover:bg-green-600/40 transition-colors text-sm font-bold"
                             >
-                                {isLoading ? '...' : 'Verify'}
+                                {loading ? '...' : 'Verify'}
                             </button>
                         </div>
-                        <p className="text-xs text-blue-400 mt-1 cursor-pointer" onClick={() => setOtpSent(false)}>
-                            Change Number?
-                        </p>
+                        <button onClick={() => setOtpSent(false)} className="text-xs text-blue-400 mt-2 hover:underline">Change Number</button>
                     </div>
                 )}
 
-                {/* Continue Button */}
-                <button className="signup-button" onClick={handleContinue}>
-                    Continue
+                {/* Continue */}
+                <button
+                    onClick={handleContinue}
+                    disabled={!phoneVerified || loading}
+                    className="signup-button mt-4"
+                    style={{ opacity: phoneVerified ? 1 : 0.5, cursor: phoneVerified ? 'pointer' : 'not-allowed' }}
+                >
+                    {loading ? 'Processing...' : 'Continue'}
                 </button>
-
             </div>
         </main>
     );

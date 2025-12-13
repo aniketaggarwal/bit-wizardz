@@ -7,17 +7,27 @@
   Imported from src/index.css
 */
 
+/* Font handled by next/font in layout.tsx */
+
 :root {
-  --font-family: 'Inter', system-ui, Avenir, Helvetica, Arial, sans-serif;
-  --bg-color: #050505;
+  /* Use variables injected by next/font */
+  --font-family: var(--font-family), 'Inter', system-ui, sans-serif;
+  --font-brand: var(--font-brand), 'Cinzel', serif;
+
+  /* Cosmic Theme Palette */
+  --bg-color: #0f0518;
+  /* Deep Violet/Black */
   --text-color: #ffffff;
-  --primary-color: #00f0ff;
-  /* Cyberpunk cyan */
-  --secondary-color: #ff003c;
-  /* Cyberpunk red */
-  --glass-bg: rgba(20, 20, 20, 0.6);
-  --glass-border: rgba(255, 255, 255, 0.1);
-  --scan-line-color: rgba(0, 240, 255, 0.8);
+  --primary-color: #D050FF;
+  /* Neon Purple */
+  --secondary-color: #FFD700;
+  /* Gold */
+  --accent-color: #8A2BE2;
+  /* Cosmic Violet */
+
+  --glass-bg: rgba(20, 0, 50, 0.6);
+  --glass-border: rgba(208, 80, 255, 0.3);
+  --scan-line-color: rgba(208, 80, 255, 0.8);
 }
 
 * {
@@ -30,18 +40,31 @@ body {
   font-family: var(--font-family);
   background-color: var(--bg-color);
   background-image:
-    radial-gradient(circle at 50% 50%, rgba(0, 240, 255, 0.05) 0%, transparent 60%),
-    linear-gradient(rgba(255, 255, 255, 0.03) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(255, 255, 255, 0.03) 1px, transparent 1px);
-  background-size: 100% 100%, 30px 30px, 30px 30px;
+    radial-gradient(circle at 50% 50%, rgba(138, 43, 226, 0.15) 0%, transparent 60%),
+    linear-gradient(rgba(208, 80, 255, 0.03) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(208, 80, 255, 0.03) 1px, transparent 1px);
+  background-size: 100% 100%, 40px 40px, 40px 40px;
   color: var(--text-color);
   min-height: 100vh;
-  /* display: flex; -> Commented to allow Next.js routing structure */
-  /* justify-content: center; */
-  /* align-items: center; */
   overflow-x: hidden;
-  /* Changed from overflow: hidden to allow scrolling if needed */
 }
+
+/* ... (skipping unchanged parts) ... */
+
+.luminous-border {
+  position: relative;
+  border-radius: 1rem;
+  /* Match container radius */
+  padding: 8px;
+  /* Thicker border */
+  background: linear-gradient(90deg, #a855f7, #d946ef, #ffffff, #d946ef, #a855f7);
+  background-size: 300% 300%;
+  animation: borderRotate 3s ease infinite;
+  box-shadow: 0 0 15px #d946ef, 0 0 30px #a855f7;
+  will-change: background-position;
+}
+
+
 
 /* App Structure */
 .app-container {
@@ -59,13 +82,18 @@ body {
   text-align: center;
 }
 
-.app-header h1 {
-  font-size: 2.5rem;
-  letter-spacing: 4px;
+.app-header h1,
+.header-brand {
+  font-family: var(--font-brand);
+  font-size: 3.5rem;
+  /* Bigger */
+  letter-spacing: 6px;
   text-transform: uppercase;
-  color: var(--primary-color);
-  text-shadow: 0 0 10px rgba(0, 240, 255, 0.5);
+  color: #fff;
+  text-shadow: 0 0 15px rgba(255, 255, 255, 0.3);
   margin-bottom: 0.5rem;
+  font-weight: 400;
+  /* Castellar is usually naturally bold/decorative */
 }
 
 .app-header p {
@@ -299,17 +327,7 @@ video {
   }
 }
 
-.luminous-border {
-  position: relative;
-  border-radius: 1rem;
-  /* Match container radius */
-  padding: 8px;
-  /* Thicker border */
-  background: linear-gradient(90deg, #06b6d4, #22d3ee, #ffffff, #22d3ee, #06b6d4);
-  background-size: 300% 300%;
-  animation: borderRotate 3s ease infinite;
-  box-shadow: 0 0 15px #22d3ee, 0 0 30px #06b6d4;
-}
+
 
 .luminous-border::after {
   content: "";

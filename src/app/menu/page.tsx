@@ -8,88 +8,59 @@ import '../login.css';
 
 import Image from 'next/image';
 
+import ProfileDropdown from '@/components/ProfileDropdown';
+
+import { enforceDeviceLock } from '@/lib/device';
+
 export default function MenuPage() {
     const router = useRouter();
-
-    const [profileMenuOpen, setProfileMenuOpen] = useState(false);
-    const profileCloseTimeout = useRef<any>(null);
-    const profileWrapperRef = useRef<HTMLDivElement | null>(null);
-    const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
-
+    // Removed inline profile state
     const [userName, setUserName] = useState<string>('');
     const [mounted, setMounted] = useState(false);
 
     useEffect(() => {
-        const fetchProfile = async () => {
+        const init = async () => {
             const { data: { user } } = await supabase.auth.getUser();
             if (user) {
+                // 1. Enforce Device Lock
+                const allowed = await enforceDeviceLock(user.id);
+                if (!allowed) {
+                    router.replace('/device-mismatch');
+                    return;
+                }
+
+                // 2. Fetch Profile
                 const { data } = await supabase.from('users').select('name').eq('id', user.id).single();
                 if (data?.name) setUserName(data.name);
             }
         }
-        fetchProfile();
-        // mark mounted after client-side render to avoid hydration mismatch
+        init();
         setMounted(true);
-    }, []);
+    }, [router]);
 
     return (
         <main
             className="min-h-screen relative"
             style={{
-                background: "linear-gradient(rgba(0,20,40,0.68), rgba(0,17,36,0.68)), url('/city-life.jpg')",
+                minHeight: '100vh',
+                background: 'var(--bg-color)',
+                color: 'var(--text-color)',
+                fontFamily: 'var(--font-family)',
+                // Cosmic City Overlay
+                backgroundImage: `linear-gradient(rgba(20, 0, 50, 0.85), rgba(60, 10, 100, 0.8)), url('/city-life.jpg')`,
                 backgroundSize: 'cover',
                 backgroundPosition: 'center',
-                color: '#e6eef8',
-                overflow: 'hidden',
-                backgroundRepeat: 'no-repeat'
+                overflow: 'hidden'
             }}
         >
-
-            {/* Header bar */}
+            {/* Header */}
             <header className="top-header">
-                <div style={{ width: 120 }}></div>
-                <div className="header-brand">FastInn</div>
-                <div style={{ flex: 1, display: 'flex', justifyContent: 'center' }}>
-                    <button className="header-cta" onClick={() => router.push('/how-to')}>How To Use?</button>
+                <div style={{ flex: 1, display: 'flex', alignItems: 'center' }}>
+                    <div className="header-brand">FastInn</div>
                 </div>
-                <div style={{ width: 120, display: 'flex', justifyContent: 'flex-end', paddingRight: 24 }}>
-                    <div
-                        className="profile-avatar-wrapper"
-                        ref={(el) => (profileWrapperRef.current = el)}
-                        onMouseEnter={() => {
-                            if (profileCloseTimeout.current) {
-                                clearTimeout(profileCloseTimeout.current);
-                                profileCloseTimeout.current = null;
-                            }
-                            setProfileMenuOpen(true);
-                        }}
-                        onMouseLeave={() => {
-                            profileCloseTimeout.current = setTimeout(() => setProfileMenuOpen(false), 220);
-                        }}
-                    >
-                        <div className="profile-avatar" role="img" aria-label="user avatar">
-                            <div className="avatar-letter">{(userName && userName.charAt(0).toUpperCase()) || 'U'}</div>
-                        </div>
-                        {profileMenuOpen && (
-                            <div
-                                className="profile-popup"
-                                onMouseEnter={() => {
-                                    if (profileCloseTimeout.current) {
-                                        clearTimeout(profileCloseTimeout.current);
-                                        profileCloseTimeout.current = null;
-                                    }
-                                    setProfileMenuOpen(true);
-                                }}
-                                onMouseLeave={() => {
-                                    profileCloseTimeout.current = setTimeout(() => setProfileMenuOpen(false), 220);
-                                }}
-                            >
-                                <button className="profile-popup-item" onClick={() => { router.push('/profile'); setProfileMenuOpen(false); }}>Visit Profile</button>
-                                <button className="profile-popup-item" onClick={() => { router.push('/how-to'); setProfileMenuOpen(false); }}>How To Use?</button>
-                                <button className="profile-popup-item profile-logout-inline" onClick={() => { setShowLogoutConfirm(true); setProfileMenuOpen(false); }}>Logout</button>
-                            </div>
-                        )}
-                    </div>
+                <div style={{ flex: 1 }}></div>
+                <div style={{ flex: 1, display: 'flex', justifyContent: 'flex-end' }}>
+                    <ProfileDropdown />
                 </div>
             </header>
 
@@ -104,23 +75,7 @@ export default function MenuPage() {
                 null
             )}
 
-            {/* Logout confirmation modal */}
-            {showLogoutConfirm && (
-                <div className="modal-overlay">
-                    <div className="modal-card">
-                        <h2 style={{ color: '#dc2626', fontSize: 20, marginBottom: 12 }}>Logging Out?</h2>
-                        <div style={{ display: 'flex', gap: 12, justifyContent: 'center' }}>
-                            <button className="modal-btn" onClick={async () => {
-                                setShowLogoutConfirm(false);
-                                const { error } = await supabase.from('profiles').update({ active_device_id: null }).eq('id', (await supabase.auth.getUser()).data.user?.id);
-                                await supabase.auth.signOut();
-                                router.push('/');
-                            }} style={{ color: '#dc2626' }}>Yes</button>
-                            <button className="modal-btn" onClick={() => setShowLogoutConfirm(false)} style={{ color: '#16a34a' }}>No</button>
-                        </div>
-                    </div>
-                </div>
-            )}
+
 
             {/* Main content: no popup card — buttons sit directly on background with login-button styling */}
             <div className="w-full flex items-center justify-center" style={{ padding: '6rem 1rem' }}>
@@ -135,39 +90,39 @@ export default function MenuPage() {
                         </div>
                     </div>
 
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                                <button onClick={() => router.push('/upload-id')} className="login-button menu-button" style={{ textAlign: 'left', display: 'flex', gap: 12, alignItems: 'center', background: 'linear-gradient(90deg,#fff1f2,#f0f9ff)', color: '#081028', border: '1px solid rgba(255,255,255,0.06)' }}>
-                                    <div style={{ fontSize: 32 }}>📄</div>
-                                    <div>
-                                        <div style={{ fontSize: 18, fontWeight: 700 }}>Re-Verify ID</div>
-                                        <div style={{ fontSize: 13, color: '#475569' }}>Manage ID</div>
-                                    </div>
-                                </button>
-
-                                <button onClick={() => router.push('/register-face')} className="login-button menu-button" style={{ textAlign: 'left', display: 'flex', gap: 12, alignItems: 'center', background: 'linear-gradient(90deg,#fff7ed,#eef2ff)', color: '#081028', border: '1px solid rgba(255,255,255,0.06)' }}>
-                                    <div style={{ fontSize: 32 }}>👤</div>
-                                    <div>
-                                        <div style={{ fontSize: 18, fontWeight: 700 }}>Re-Scan Face</div>
-                                        <div style={{ fontSize: 13, color: '#475569' }}>Manage Biometrics</div>
-                                    </div>
-                                </button>
-
-                                <button onClick={() => router.push('/checkin')} className="login-button menu-button" style={{ textAlign: 'left', display: 'flex', gap: 12, alignItems: 'center', background: 'linear-gradient(90deg,#fff7f0,#f0fff4)', color: '#081028', border: '1px solid rgba(255,255,255,0.06)' }}>
-                                    <div style={{ fontSize: 32 }}>🏨</div>
-                                    <div>
-                                        <div style={{ fontSize: 18, fontWeight: 700 }}>Self Check-in</div>
-                                        <div style={{ fontSize: 13, color: '#475569' }}>Guest Kiosk Mode</div>
-                                    </div>
-                                </button>
-
-                                <button onClick={() => router.push('/profile')} className="login-button menu-button" style={{ textAlign: 'left', display: 'flex', gap: 12, alignItems: 'center', background: 'linear-gradient(90deg,#f8fbff,#fff6fb)', color: '#081028', border: '1px solid rgba(255,255,255,0.06)' }}>
-                                    <div style={{ fontSize: 32 }}>🆔</div>
-                                    <div>
-                                        <div style={{ fontSize: 18, fontWeight: 700 }}>Your Profile</div>
-                                        <div style={{ fontSize: 13, color: '#475569' }}>View Account Details</div>
-                                    </div>
-                                </button>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <button onClick={() => router.push('/upload-id')} className="login-button menu-button" style={{ textAlign: 'left', display: 'flex', gap: 12, alignItems: 'center', background: 'linear-gradient(90deg,#fff1f2,#f0f9ff)', color: '#081028', border: '1px solid rgba(255,255,255,0.06)' }}>
+                            <div style={{ fontSize: 32 }}>📄</div>
+                            <div>
+                                <div style={{ fontSize: 18, fontWeight: 700 }}>Re-Verify ID</div>
+                                <div style={{ fontSize: 13, color: '#475569' }}>Manage ID</div>
                             </div>
+                        </button>
+
+                        <button onClick={() => router.push('/register-face')} className="login-button menu-button" style={{ textAlign: 'left', display: 'flex', gap: 12, alignItems: 'center', background: 'linear-gradient(90deg,#fff7ed,#eef2ff)', color: '#081028', border: '1px solid rgba(255,255,255,0.06)' }}>
+                            <div style={{ fontSize: 32 }}>👤</div>
+                            <div>
+                                <div style={{ fontSize: 18, fontWeight: 700 }}>Re-Scan Face</div>
+                                <div style={{ fontSize: 13, color: '#475569' }}>Manage Biometrics</div>
+                            </div>
+                        </button>
+
+                        <button onClick={() => router.push('/checkin')} className="login-button menu-button" style={{ textAlign: 'left', display: 'flex', gap: 12, alignItems: 'center', background: 'linear-gradient(90deg,#fff7f0,#f0fff4)', color: '#081028', border: '1px solid rgba(255,255,255,0.06)' }}>
+                            <div style={{ fontSize: 32 }}>🏨</div>
+                            <div>
+                                <div style={{ fontSize: 18, fontWeight: 700 }}>Self Check-in</div>
+                                <div style={{ fontSize: 13, color: '#475569' }}>Guest Kiosk Mode</div>
+                            </div>
+                        </button>
+
+                        <button onClick={() => router.push('/profile')} className="login-button menu-button" style={{ textAlign: 'left', display: 'flex', gap: 12, alignItems: 'center', background: 'linear-gradient(90deg,#f8fbff,#fff6fb)', color: '#081028', border: '1px solid rgba(255,255,255,0.06)' }}>
+                            <div style={{ fontSize: 32 }}>🆔</div>
+                            <div>
+                                <div style={{ fontSize: 18, fontWeight: 700 }}>Your Profile</div>
+                                <div style={{ fontSize: 13, color: '#475569' }}>View Account Details</div>
+                            </div>
+                        </button>
+                    </div>
 
                     {/* footer logout removed; logout only available in profile dropdown */}
                 </div>

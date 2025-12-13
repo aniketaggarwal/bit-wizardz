@@ -1,8 +1,8 @@
 .signup-container {
     min-height: 100vh;
     width: 100%;
-    /* Blue Theme Overlay + Background */
-    background: linear-gradient(rgba(30, 58, 138, 0.7), rgba(37, 99, 235, 0.7)), url('/city-life.jpg');
+    /* Cosmic Theme Overlay + Background */
+    background: linear-gradient(rgba(20, 0, 50, 0.8), rgba(60, 10, 100, 0.7)), url('/city-life.jpg');
     background-size: cover;
     background-position: center;
     display: flex;
@@ -12,18 +12,221 @@
 }
 
 .signup-card {
-    background: white;
+    /* Glassmorphism */
+    background: rgba(255, 255, 255, 0.03);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border: 1px solid rgba(138, 43, 226, 0.3); /* Violet Border */
     padding: 2rem 2.5rem;
     border-radius: 20px;
     width: 100%;
     max-width: 420px;
-    /* Slightly wider for the pop-up feel */
-    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.2);
+    box-shadow: 0 20px 50px rgba(0, 0, 0, 0.5);
     display: flex;
     flex-direction: column;
     gap: 20px;
     position: relative;
     animation: slideUp 0.4s ease-out;
+}
+
+@keyframes slideUp {
+    from {
+        transform: translateY(20px);
+        opacity: 0;
+    }
+
+    to {
+        transform: translateY(0);
+        opacity: 1;
+    }
+}
+
+/* Header */
+.signup-header {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+    margin-bottom: 8px;
+}
+
+.back-button {
+    position: absolute;
+    left: 0;
+    top: 50%;
+    transform: translateY(-50%);
+    background: none;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    color: #e2e8f0;
+    cursor: pointer;
+    padding: 8px;
+    border-radius: 50%;
+    transition: all 0.2s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.back-button:hover {
+    background: rgba(138, 43, 226, 0.2);
+    color: #7DF9FF;
+    border-color: #7DF9FF;
+}
+
+.signup-title {
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: #ffffff;
+    text-shadow: 0 0 10px rgba(138, 43, 226, 0.5);
+}
+
+/* Form Elements */
+.input-group {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.input-label {
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: #7DF9FF; /* Electric Blue */
+    margin-left: 2px;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+}
+
+.slick-input {
+    width: 100%;
+    padding: 14px 18px;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 12px;
+    font-size: 1rem;
+    transition: all 0.3s ease;
+    background: rgba(0, 0, 0, 0.3);
+    color: #ffffff;
+    outline: none;
+}
+
+.slick-input:focus {
+    border-color: #8A2BE2; /* Cosmic Violet Focus */
+    background: rgba(0, 0, 0, 0.5);
+    box-shadow: 0 0 15px rgba(138, 43, 226, 0.3);
+}
+
+.slick-input::placeholder {
+    color: rgba(255, 255, 255, 0.3);
+}
+
+/* Buttons */
+.signup-button {
+    width: 100%;
+    padding: 14px;
+    background: linear-gradient(90deg, #4B0082, #8A2BE2);
+    /* Violet Gradient */
+    color: white;
+    border: none;
+    border-radius: 12px;
+    font-size: 1rem;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    margin-top: 8px;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    box-shadow: 0 5px 20px rgba(75, 0, 130, 0.4);
+}
+
+.signup-button:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 25px rgba(138, 43, 226, 0.6);
+    filter: brightness(1.2);
+}
+
+/* Divider */
+.divider-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 12px;
+    margin-top: 4px;
+}
+
+.divider-text {
+    font-size: 0.9rem;
+    color: #94a3b8;
+    font-weight: 500;
+}
+
+/* Google Button */
+.google-button {
+    width: 100%;
+    padding: 14px;
+    background: rgba(255, 255, 255, 0.05);
+    color: #ffffff;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 12px;
+    font-size: 1rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 12px;
+}
+
+.google-button:hover {
+    background: rgba(255, 255, 255, 0.1);
+    border-color: #ffffff;
+}
+
+/* OTP Verification Styles */
+.otp-container {
+    display: flex;
+    flex-direction: row;
+    gap: 8px;
+    margin-bottom: 24px;
+    justify-content: center;
+}
+
+.otp-box {
+    width: 48px;
+    height: 56px;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    border-radius: 12px;
+    text-align: center;
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: white;
+    background: rgba(0, 0, 0, 0.3);
+    transition: all 0.2s ease;
+    outline: none;
+}
+
+.otp-box:focus {
+    border-color: #7DF9FF;
+    background: rgba(0, 0, 0, 0.5);
+    box-shadow: 0 0 15px rgba(125, 249, 255, 0.3);
+}
+
+.verify-button {
+    width: 100%;
+    padding: 14px;
+    background: linear-gradient(90deg, #FFD700, #FDB931);
+    /* Gold Gradient */
+    color: #3b2a00;
+    border: none;
+    border-radius: 12px;
+    font-size: 1rem;
+    font-weight: 800;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.verify-button:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 0 20px rgba(255, 215, 0, 0.5);
 }
 
 @keyframes slideUp {

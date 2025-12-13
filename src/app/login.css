@@ -4,8 +4,7 @@
     flex-direction: row;
     /* Split screen logic */
     width: 100%;
-    background: #f8fafc;
-    /* Clean, professional background */
+    background: #0f0518; /* Deep dark purple/black bg */
     font-family: 'Inter', sans-serif;
     overflow: hidden;
     /* Prevent scrollbars if not needed */
@@ -18,12 +17,12 @@
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    /* Blue Overlay */
-    background: linear-gradient(rgba(30, 58, 138, 0.6), rgba(37, 99, 235, 0.6)), url('/city-life.jpg');
+    /* Cosmic Violet Overlay */
+    background: linear-gradient(rgba(20, 0, 50, 0.8), rgba(60, 10, 100, 0.7)), url('/city-life.jpg');
     background-size: cover;
     background-position: center;
     position: relative;
-    border-right: 1px solid rgba(0, 0, 0, 0.05);
+    border-right: 1px solid rgba(255, 255, 255, 0.1);
     color: white;
 }
 
@@ -34,9 +33,419 @@
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    background: #f1f5f9;
-    /* Subtle off-white background */
+    background: linear-gradient(135deg, #0f0518 0%, #1a0b2e 100%);
+    /* Deep Violet/Black Gradient */
     padding: 40px;
+}
+
+/* Content wrappers */
+.branding-content {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 24px;
+}
+
+.form-content {
+    width: 100%;
+    max-width: 400px;
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
+
+    /* Card Styles - Translucent Glass */
+    background: rgba(255, 255, 255, 0.03);
+    backdrop-filter: blur(10px);
+    padding: 40px;
+    border-radius: 24px;
+    box-shadow: 0 20px 50px rgba(0, 0, 0, 0.3);
+    border: 1px solid rgba(138, 43, 226, 0.2); /* Violet Border */
+    position: relative;
+}
+
+/* Branding Styles */
+.logo-placeholder {
+    width: 90px;
+    height: 90px;
+    /* Electric Blue to Violet Gradient */
+    background: linear-gradient(135deg, #7DF9FF, #8A2BE2);
+    border-radius: 24px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    box-shadow: 0 0 30px rgba(138, 43, 226, 0.5);
+}
+
+.brand-name {
+    font-size: 3.5rem;
+    font-weight: 400; /* Castellar is bold by default usually */
+    font-family: var(--font-brand), serif; /* Use Castellar */
+    font-style: normal;
+    color: #FFD700; /* Gold */
+    letter-spacing: 4px;
+    background: none;
+    text-shadow: 0 0 20px rgba(255, 215, 0, 0.4);
+    text-transform: uppercase;
+    margin-top: 10px;
+}
+
+.brand-tagline {
+    font-size: 1.1rem;
+    color: #e2e8f0;
+    margin-top: -5px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    opacity: 0.8;
+}
+
+/* Form Styles */
+.form-title {
+    font-size: 2rem;
+    font-weight: 700;
+    color: #ffffff;
+    margin-bottom: 8px;
+    font-family: var(--font-brand), sans-serif; /* Optional: Use brand font for headers too? adhering to req */
+    letter-spacing: 1px;
+}
+
+.form-subtitle {
+    color: #94a3b8;
+    font-size: 1rem;
+    margin-bottom: 24px;
+}
+
+.input-group {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.input-label {
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: #7DF9FF; /* Electric Blue Labels */
+    margin-left: 4px;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+}
+
+.slick-input {
+    width: 100%;
+    padding: 14px 18px;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 12px;
+    font-size: 1rem;
+    transition: all 0.3s ease;
+    background: rgba(0, 0, 0, 0.3);
+    color: #ffffff;
+    outline: none;
+}
+
+.slick-input:focus {
+    border-color: #8A2BE2; /* Cosmic Violet Focus */
+    background: rgba(0, 0, 0, 0.5);
+    box-shadow: 0 0 15px rgba(138, 43, 226, 0.3);
+}
+
+.slick-input::placeholder {
+    color: rgba(255, 255, 255, 0.3);
+}
+
+.login-button {
+    width: 100%;
+    padding: 16px;
+    background: linear-gradient(90deg, #4B0082, #8A2BE2);
+    /* Violet Gradient */
+    color: white;
+    border: none;
+    border-radius: 12px;
+    font-size: 1rem;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    margin-top: 12px;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    box-shadow: 0 5px 20px rgba(75, 0, 130, 0.4);
+}
+
+.login-button:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 25px rgba(138, 43, 226, 0.6);
+    filter: brightness(1.2);
+}
+
+.login-button:active {
+    transform: translateY(0);
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+    .login-container {
+        flex-direction: column;
+    }
+
+    .split-left {
+        padding: 40px 20px;
+        min-height: 250px;
+        border-right: none;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    }
+
+    .logo-placeholder {
+        width: 60px;
+        height: 60px;
+    }
+
+    .brand-name {
+        font-size: 2.2rem;
+    }
+
+    .split-right {
+        padding: 30px 20px;
+    }
+}
+
+/* Sign Up Link Styles */
+.signup-text {
+    margin-top: 20px;
+    font-size: 0.9rem;
+    color: #94a3b8;
+    text-align: center;
+}
+
+.signup-link {
+    color: #FFD700; /* Gold Link */
+    font-weight: 700;
+    text-decoration: none;
+    cursor: pointer;
+    transition: color 0.2s ease;
+    border-bottom: 1px solid transparent;
+}
+
+.signup-link:hover {
+    color: #FFE55C;
+    border-bottom-color: #FFE55C;
+}
+
+/* Google Button Styles */
+.google-button {
+    width: 100%;
+    padding: 14px;
+    background: rgba(255, 255, 255, 0.05);
+    color: #ffffff;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 12px;
+    font-size: 1rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    margin-top: 4px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 12px;
+}
+
+.google-button:hover {
+    background: rgba(255, 255, 255, 0.1);
+    border-color: #ffffff;
+}
+
+/* OTP Verification Styles */
+.otp-container {
+    display: flex;
+    flex-direction: row;
+    gap: 8px;
+    margin-bottom: 24px;
+    justify-content: center;
+}
+
+.otp-box {
+    width: 48px;
+    height: 56px;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    border-radius: 12px;
+    text-align: center;
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: white;
+    background: rgba(0, 0, 0, 0.3);
+    transition: all 0.2s ease;
+    outline: none;
+}
+
+.otp-box:focus {
+    border-color: #7DF9FF;
+    background: rgba(0, 0, 0, 0.5);
+    box-shadow: 0 0 15px rgba(125, 249, 255, 0.3);
+}
+
+.verify-button {
+    width: 100%;
+    padding: 14px;
+    background: linear-gradient(90deg, #FFD700, #FDB931);
+    /* Gold Gradient */
+    color: #3b2a00;
+    /* Dark Brown Text for contrast on Gold */
+    border: none;
+    border-radius: 12px;
+    font-size: 1rem;
+    font-weight: 800;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.verify-button:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 0 20px rgba(255, 215, 0, 0.5);
+}
+
+/* Menu button inner border glow on hover (Electric Blue) */
+.menu-button {
+    position: relative;
+    overflow: visible;
+    border-radius: 12px;
+}
+
+.menu-button::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    border-radius: 12px;
+    pointer-events: none;
+    transition: box-shadow 180ms ease, opacity 180ms ease;
+    box-shadow: inset 0 0 0 0 rgba(64, 224, 208, 0);
+}
+
+.menu-button:hover::after {
+    box-shadow: inset 0 0 0 3px #7DF9FF;
+}
+
+.menu-button:hover {
+    transform: translateY(-4px);
+    transition: transform 160ms ease;
+}
+
+.menu-button {
+    transition: transform 160ms ease, background 160ms ease, box-shadow 160ms ease;
+}
+
+/* Header bar styles */
+.top-header {
+    position: sticky;
+    top: 0;
+    z-index: 60;
+    height: 64px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    background: rgba(15, 5, 24, 0.8);
+    /* Dark Violet */
+    color: #e6eef8;
+    backdrop-filter: blur(10px);
+}
+
+.header-brand {
+    font-family: var(--font-brand);
+    color: #FFD700;
+    /* Gold */
+    font-size: 24px;
+    font-weight: 400;
+    margin-left: 8px;
+    letter-spacing: 2px;
+}
+
+.header-cta {
+    background: rgba(255, 255, 255, 0.1);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    color: #ffffff;
+    padding: 8px 12px;
+    border-radius: 8px;
+    cursor: pointer;
+    font-weight: 700;
+    transition: all 0.2s;
+}
+
+.header-cta:hover {
+    background: rgba(255, 255, 255, 0.2);
+    border-color: #7DF9FF;
+    color: #7DF9FF;
+}
+
+.profile-avatar-wrapper {
+    position: relative;
+}
+
+.profile-avatar {
+    width: 44px;
+    height: 44px;
+    border-radius: 9999px;
+    overflow: hidden;
+    border: 1px solid #7DF9FF;
+    /* Electric Blue */
+    box-shadow: 0 0 8px rgba(138, 43, 226, 0.5);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: default;
+    background: linear-gradient(180deg, rgba(255, 255, 255, 0.06), rgba(255, 255, 255, 0.02));
+}
+
+.avatar-letter {
+    color: #FFD700;
+    /* Gold Letter */
+    font-weight: 800;
+    font-size: 18px;
+}
+
+.profile-popup {
+    position: absolute;
+    right: 0;
+    top: calc(100% + 8px);
+    background: #1a0b2e;
+    /* Deep Violet */
+    padding: 8px;
+    border-radius: 8px;
+    min-width: 160px;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.8);
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    border: 1px solid rgba(138, 43, 226, 0.3);
+}
+
+.profile-popup-item {
+    background: transparent;
+    border: none;
+    color: #e6eef8;
+    padding: 8px 10px;
+    text-align: left;
+    cursor: pointer;
+    border-radius: 6px;
+}
+
+.profile-popup-item:hover {
+    background: rgba(138, 43, 226, 0.2);
+    color: #7DF9FF;
+}
+
+.profile-logout-button {
+    padding: 8px 12px;
+    border-radius: 10px;
+    font-size: 0.95rem;
+    font-weight: 700;
+    width: 100%;
+    box-shadow: none;
+    border: 1px solid rgba(220, 38, 38, 0.5);
+    background: rgba(220, 38, 38, 0.1);
+    color: #ef4444;
+}
+
+.profile-logout-button:hover {
+    background: rgba(220, 38, 38, 0.2);
+    border-color: #ef4444;
 }
 
 /* Content wrappers */

@@ -115,10 +115,7 @@ export default function Signup() {
                             </button>
                         </div>
 
-                        {/* Dev Link */}
-                        <div style={{ marginTop: '20px', textAlign: 'center' }}>
-                            <a href="/register-face" style={{ fontSize: '0.8rem', color: '#cbd5e1', textDecoration: 'none' }}>[Dev: Go to Face Scan]</a>
-                        </div>
+
                     </>
                 ) : (
                     <div style={{ textAlign: 'center', padding: '20px' }}>
