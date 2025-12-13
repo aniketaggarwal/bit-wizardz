@@ -121,7 +121,7 @@ function UploadContent() {
                 }
             } else {
                 setStatus('failed');
-                setErrorMsg(result.error || 'Verification Failed. Details did not match.');
+                setErrorMsg(result.errors?.[0] || 'Verification Failed. Details did not match.');
             }
 
         } catch (err: any) {
