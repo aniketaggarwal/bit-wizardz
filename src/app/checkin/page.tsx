@@ -187,10 +187,11 @@ function CheckInContent() {
                             {checkinStep === 'scan-qr' && (
                                 <div className="flex flex-col gap-4 animate-fade-in mt-4">
                                     {/* Option A: Scanner */}
+                                    <div className="bg-black rounded-xl overflow-hidden shadow-2xl mx-auto w-full max-w-sm relative">
                                         <QrCodeScanner
                                             onScanSuccess={(decodedText: string) => {
                                                 console.log("QR Scanned:", decodedText);
-                                                
+
                                                 // Extract Session ID if it's a URL
                                                 let finalId = decodedText;
                                                 try {
@@ -226,119 +227,117 @@ function CheckInContent() {
                                     </div>
 
                                     {/* Option B: Manual Input */}
-                            <div className="p-3 bg-white/5 rounded-lg border border-white/10 flex gap-2">
-                                <input
-                                    type="text"
-                                    placeholder="Booking ID (e.g. BOOKING-1234)"
-                                    className="flex-1 bg-transparent border-none text-white placeholder-slate-500 focus:ring-0 outline-none font-mono text-sm"
-                                    value={sessionId}
-                                    onChange={e => setSessionId(e.target.value)}
-                                />
-                                <button
-                                    onClick={handleQrScan}
-                                    className="px-4 py-2 bg-blue-600 text-white rounded-lg font-bold text-sm hover:bg-blue-500"
-                                >
-                                    Next
-                                </button>
-                            </div>
-                        </div>
+                                    <div className="p-3 bg-white/5 rounded-lg border border-white/10 flex gap-2">
+                                        <input
+                                            type="text"
+                                            placeholder="Booking ID (e.g. BOOKING-1234)"
+                                            className="flex-1 bg-transparent border-none text-white placeholder-slate-500 focus:ring-0 outline-none font-mono text-sm"
+                                            value={sessionId}
+                                            onChange={e => setSessionId(e.target.value)}
+                                        />
+                                        <button
+                                            onClick={handleQrScan}
+                                            className="px-4 py-2 bg-blue-600 text-white rounded-lg font-bold text-sm hover:bg-blue-500"
+                                        >
+                                            Next
+                                        </button>
+                                    </div>
+                                </div>
                             )}
-                    </div>
-
-                    {/* Face Card */}
-                    <div style={{ background: 'rgba(255,255,255,0.04)', padding: 18, borderRadius: 12, boxShadow: '0 10px 30px rgba(2,6,23,0.35)' }}>
-                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                            <div>
-                                <div style={{ fontSize: 18, fontWeight: 800 }}>2. Webcam Face Scan</div>
-                                <div style={{ color: '#94a3b8', marginTop: 6, fontSize: 13 }}>Position your face in the frame and follow the on-screen guidance.</div>
-                            </div>
-                            <div>
-                                <button
-                                    onClick={() => setCheckinStep('scan-face')}
-                                    style={checkinStep === 'scan-face' ? { background: '#000', color: '#fff', padding: '10px 14px', borderRadius: 10, fontWeight: 800 } : { background: '#ffffff', color: '#000', padding: '10px 14px', borderRadius: 10, fontWeight: 800 }}
-                                >
-                                    {checkinStep === 'scan-face' ? 'Start Scan' : 'Open'}
-                                </button>
-                            </div>
                         </div>
 
-                        {checkinStep === 'scan-face' && (
-                            <div style={{ marginTop: 12 }}>
-                                <FaceScanner onScan={handleFaceScan} />
-                                <p style={{ marginTop: 8, fontWeight: 700, textAlign: 'center' }}>{verificationStatus === 'success' ? `Hello, ${matchedName}!` : 'Look at the camera...'}</p>
-                            </div>
-                        )}
-                    </div>
-
-                    {/* Finalize Card */}
-                    <div style={{ background: 'rgba(255,255,255,0.04)', padding: 18, borderRadius: 12, boxShadow: '0 10px 30px rgba(2,6,23,0.32)' }}>
-                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                            <div>
-                                <div style={{ fontSize: 18, fontWeight: 800 }}>3. Finalize</div>
-                                <div style={{ color: '#94a3b8', marginTop: 6, fontSize: 13 }}>After successful scan, we process verification and provide your room key.</div>
-                            </div>
-                            <div>
-                                <button
-                                    onClick={() => setCheckinStep('verifying-server')}
-                                    style={checkinStep === 'verifying-server' ? { background: '#000', color: '#fff', padding: '10px 14px', borderRadius: 10, fontWeight: 800 } : { background: '#ffffff', color: '#000', padding: '10px 14px', borderRadius: 10, fontWeight: 800 }}
-                                >
-                                    {checkinStep === 'verifying-server' ? 'Processing' : 'Finalize'}
-                                </button>
-                            </div>
-                        </div>
-
-                        {checkinStep === 'verifying-server' && (
-                            <div style={{ marginTop: 12 }}>
-                                <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                                    <div className="animate-spin h-6 w-6 border-2 border-blue-500 rounded-full border-t-transparent"></div>
-                                    <div style={{ color: '#c7d2fe' }}>Verifying with Server...</div>
+                        {/* Face Card */}
+                        <div style={{ background: 'rgba(255,255,255,0.04)', padding: 18, borderRadius: 12, boxShadow: '0 10px 30px rgba(2,6,23,0.35)' }}>
+                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                                <div>
+                                    <div style={{ fontSize: 18, fontWeight: 800 }}>2. Webcam Face Scan</div>
+                                    <div style={{ color: '#94a3b8', marginTop: 6, fontSize: 13 }}>Position your face in the frame and follow the on-screen guidance.</div>
+                                </div>
+                                <div>
+                                    <button
+                                        onClick={() => setCheckinStep('scan-face')}
+                                        style={checkinStep === 'scan-face' ? { background: '#000', color: '#fff', padding: '10px 14px', borderRadius: 10, fontWeight: 800 } : { background: '#ffffff', color: '#000', padding: '10px 14px', borderRadius: 10, fontWeight: 800 }}
+                                    >
+                                        {checkinStep === 'scan-face' ? 'Start Scan' : 'Open'}
+                                    </button>
                                 </div>
                             </div>
-                        )}
-                    </div>
-                </div>
 
-                {/* Step 1: QR Input (Scanner + Manual Fallback) - Moved to Card */}
+                            {checkinStep === 'scan-face' && (
+                                <div style={{ marginTop: 12 }}>
+                                    <FaceScanner onScan={handleFaceScan} />
+                                    <p style={{ marginTop: 8, fontWeight: 700, textAlign: 'center' }}>{verificationStatus === 'success' ? `Hello, ${matchedName}!` : 'Look at the camera...'}</p>
+                                </div>
+                            )}
+                        </div>
 
-                {/* Step 2: Fetching Nonce Loading State */}
-                {checkinStep === 'fetch-nonce' && (
-                    <div className="flex flex-col items-center">
-                        <div className="animate-spin h-8 w-8 border-4 border-blue-500 rounded-full border-t-transparent"></div>
-                        <p className="mt-4 text-gray-600">Securely contacting server...</p>
-                    </div>
-                )}
-
-                {/* Step 3: Face Scan */}
-                {(checkinStep === 'scan-face' || checkinStep === 'verifying-server') && (
-                    <div className="w-full max-w-md flex flex-col items-center gap-4">
-                        <FaceScanner onScan={handleFaceScan} />
-
-                        <p className="text-center mt-2 font-bold text-lg h-8">
-                            {verificationStatus === 'success' ? `Hello, ${matchedName}!` : 'Look at the camera...'}
-                        </p>
-
-                        {checkinStep === 'verifying-server' && (
-                            <div className="bg-blue-100 text-blue-700 px-4 py-2 rounded flex items-center gap-2">
-                                <div className="animate-spin h-4 w-4 border-2 border-blue-700 rounded-full border-t-transparent"></div>
-                                Verifying with Server...
+                        {/* Finalize Card */}
+                        <div style={{ background: 'rgba(255,255,255,0.04)', padding: 18, borderRadius: 12, boxShadow: '0 10px 30px rgba(2,6,23,0.32)' }}>
+                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                                <div>
+                                    <div style={{ fontSize: 18, fontWeight: 800 }}>3. Finalize</div>
+                                    <div style={{ color: '#94a3b8', marginTop: 6, fontSize: 13 }}>After successful scan, we process verification and provide your room key.</div>
+                                </div>
+                                <div>
+                                    <button
+                                        onClick={() => setCheckinStep('verifying-server')}
+                                        style={checkinStep === 'verifying-server' ? { background: '#000', color: '#fff', padding: '10px 14px', borderRadius: 10, fontWeight: 800 } : { background: '#ffffff', color: '#000', padding: '10px 14px', borderRadius: 10, fontWeight: 800 }}
+                                    >
+                                        {checkinStep === 'verifying-server' ? 'Processing' : 'Finalize'}
+                                    </button>
+                                </div>
                             </div>
-                        )}
-                    </div>
-                )}
 
-                {/* Step 4: Success -> Redirecting */}
-                {checkinStep === 'complete' && (
-                    <div className="text-center p-8 bg-green-100 rounded-lg flex flex-col items-center shadow-lg">
-                        <div className="text-6xl mb-4">✅</div>
-                        <h2 className="text-3xl font-bold text-green-700 mb-2">Check-in Confirmed!</h2>
-                        <p className="text-lg">Redirecting to your Room Key...</p>
-                        <div className="animate-spin h-6 w-6 border-2 border-green-700 rounded-full border-t-transparent mt-4"></div>
+                            {checkinStep === 'verifying-server' && (
+                                <div style={{ marginTop: 12 }}>
+                                    <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                                        <div className="animate-spin h-6 w-6 border-2 border-blue-500 rounded-full border-t-transparent"></div>
+                                        <div style={{ color: '#c7d2fe' }}>Verifying with Server...</div>
+                                    </div>
+                                </div>
+                            )}
+                        </div>
                     </div>
-                )}
 
+                    {/* Step 2: Fetching Nonce Loading State */}
+                    {checkinStep === 'fetch-nonce' && (
+                        <div className="flex flex-col items-center">
+                            <div className="animate-spin h-8 w-8 border-4 border-blue-500 rounded-full border-t-transparent"></div>
+                            <p className="mt-4 text-gray-600">Securely contacting server...</p>
+                        </div>
+                    )}
+
+                    {/* Step 3: Face Scan */}
+                    {(checkinStep === 'scan-face' || checkinStep === 'verifying-server') && (
+                        <div className="w-full max-w-md flex flex-col items-center gap-4">
+                            <FaceScanner onScan={handleFaceScan} />
+
+                            <p className="text-center mt-2 font-bold text-lg h-8">
+                                {verificationStatus === 'success' ? `Hello, ${matchedName}!` : 'Look at the camera...'}
+                            </p>
+
+                            {checkinStep === 'verifying-server' && (
+                                <div className="bg-blue-100 text-blue-700 px-4 py-2 rounded flex items-center gap-2">
+                                    <div className="animate-spin h-4 w-4 border-2 border-blue-700 rounded-full border-t-transparent"></div>
+                                    Verifying with Server...
+                                </div>
+                            )}
+                        </div>
+                    )}
+
+                    {/* Step 4: Success -> Redirecting */}
+                    {checkinStep === 'complete' && (
+                        <div className="text-center p-8 bg-green-100 rounded-lg flex flex-col items-center shadow-lg">
+                            <div className="text-6xl mb-4">✅</div>
+                            <h2 className="text-3xl font-bold text-green-700 mb-2">Check-in Confirmed!</h2>
+                            <p className="text-lg">Redirecting to your Room Key...</p>
+                            <div className="animate-spin h-6 w-6 border-2 border-green-700 rounded-full border-t-transparent mt-4"></div>
+                        </div>
+                    )}
+
+                </div>
             </div>
-        </div>
-        </main >
+        </main>
     );
 }
 
