@@ -109,7 +109,7 @@ export default function Login() {
               router.push('/menu');
             } else {
               const name = data.user?.user_metadata?.name || 'User';
-              router.push(`/p1su?name=${encodeURIComponent(name)}`);
+              router.push(`/upload-aadhaar?name=${encodeURIComponent(name)}`);
             }
 
           } catch (lockError) {
