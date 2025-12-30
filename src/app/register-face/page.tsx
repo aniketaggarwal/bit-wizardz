@@ -2,8 +2,11 @@
 
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
+import BackButton from '@/components/BackButton';
 import FaceScanner from '@/components/FaceScanner';
-import * as faceapi from 'face-api.js';
+// import * as faceapi from 'face-api.js';
+import type { LabeledFaceDescriptors } from 'face-api.js';
+
 import { saveEncryptedEmbedding, loadEncryptedEmbeddings, clearSecureStorage } from '@/lib/encryption';
 import { supabase } from '@/lib/supabase';
 import '../upload-aadhaar/upload.css';
@@ -98,6 +101,7 @@ export default function RegisterFacePage() {
             }
         } else {
             // --- Verification Flow ---
+            const faceapi = await import('face-api.js');
             const faceMatcher = new faceapi.FaceMatcher(
                 registeredFaces.map(f => new faceapi.LabeledFaceDescriptors(f.name, [f.descriptor])),
                 0.6
@@ -115,6 +119,7 @@ export default function RegisterFacePage() {
         }
     };
 
+
     // User clicked "Retake"
     const handleRetake = () => {
         setReviewMode(false);
@@ -129,9 +134,9 @@ export default function RegisterFacePage() {
 
                 {/* Header */}
                 <div className="upload-header">
-                    <button className="back-button" onClick={() => router.back()}>
-                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M15 18l-6-6 6-6" /></svg>
-                    </button>
+                    <div className="absolute left-0">
+                        <BackButton className="!text-slate-500 hover:!bg-slate-100 !border-0" />
+                    </div>
                     <h1 className="upload-title">Face Verification</h1>
                 </div>
 

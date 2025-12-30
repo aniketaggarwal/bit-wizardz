@@ -2,6 +2,7 @@
 
 import { useState, useRef, useEffect, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
+import BackButton from '@/components/BackButton';
 import { verifyAadhaarCard } from '@/lib/ocr-verification';
 import { supabase } from '@/lib/supabase';
 import './upload.css';
@@ -82,7 +83,7 @@ function UploadContent() {
             const result = await verifyAadhaarCard(file, {
                 name: expectedDetails.name,
                 dob: formattedDob,
-                aadhaarLast4: expectedDetails.aadhaarLast4
+                last4: expectedDetails.aadhaarLast4
             });
 
             if (result.success) {
@@ -98,9 +99,9 @@ function UploadContent() {
                             'Authorization': `Bearer ${token}`
                         },
                         body: JSON.stringify({
-                            dob: result.extracted.dob, // Or use formattedDob if standardized
+                            dob: formattedDob, // Use formattedDob since we verified it
                             aadhaarLast4: expectedDetails.aadhaarLast4,
-                            id_masked: result.extracted.aadhaar // "XXXX XXXX 1234"
+                            id_masked: `XXXX XXXX ${expectedDetails.aadhaarLast4}` // Construct masked ID manually
                         })
                     });
 
@@ -110,7 +111,7 @@ function UploadContent() {
                     }
 
                     setStatus('success');
-                    setExtractedData(result.extracted);
+                    // setExtractedData(result.extracted); // extracted not available/needed if we verified input
                 } catch (apiErr: any) {
                     console.error("API Error Details:", apiErr);
                     setStatus('failed');
@@ -118,7 +119,7 @@ function UploadContent() {
                 }
             } else {
                 setStatus('failed');
-                setErrorMsg(result.error || 'Verification Failed. Details did not match.');
+                setErrorMsg(result.errors?.[0] || 'Verification Failed. Details did not match.');
             }
 
         } catch (err: any) {
@@ -142,9 +143,9 @@ function UploadContent() {
             {/* Conditional Header */}
             {status !== 'success' && (
                 <div className="upload-header">
-                    <button className="back-button" onClick={() => router.back()}>
-                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M15 18l-6-6 6-6" /></svg>
-                    </button>
+                    <div className="absolute left-0">
+                        <BackButton className="!text-slate-500 hover:!bg-slate-100 !border-0" />
+                    </div>
                     <h1 className="upload-title">Upload Identity</h1>
                 </div>
             )}

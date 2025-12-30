@@ -55,7 +55,7 @@ export default function MenuPage() {
                 <div style={{ width: 120, display: 'flex', justifyContent: 'flex-end', paddingRight: 24 }}>
                     <div
                         className="profile-avatar-wrapper"
-                        ref={(el) => (profileWrapperRef.current = el)}
+                        ref={(el) => { profileWrapperRef.current = el; }}
                         onMouseEnter={() => {
                             if (profileCloseTimeout.current) {
                                 clearTimeout(profileCloseTimeout.current);
@@ -135,39 +135,39 @@ export default function MenuPage() {
                         </div>
                     </div>
 
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                                <button onClick={() => router.push('/upload-id')} className="login-button menu-button" style={{ textAlign: 'left', display: 'flex', gap: 12, alignItems: 'center', background: 'linear-gradient(90deg,#fff1f2,#f0f9ff)', color: '#081028', border: '1px solid rgba(255,255,255,0.06)' }}>
-                                    <div style={{ fontSize: 32 }}>📄</div>
-                                    <div>
-                                        <div style={{ fontSize: 18, fontWeight: 700 }}>Re-Verify ID</div>
-                                        <div style={{ fontSize: 13, color: '#475569' }}>Manage ID</div>
-                                    </div>
-                                </button>
-
-                                <button onClick={() => router.push('/register-face')} className="login-button menu-button" style={{ textAlign: 'left', display: 'flex', gap: 12, alignItems: 'center', background: 'linear-gradient(90deg,#fff7ed,#eef2ff)', color: '#081028', border: '1px solid rgba(255,255,255,0.06)' }}>
-                                    <div style={{ fontSize: 32 }}>👤</div>
-                                    <div>
-                                        <div style={{ fontSize: 18, fontWeight: 700 }}>Re-Scan Face</div>
-                                        <div style={{ fontSize: 13, color: '#475569' }}>Manage Biometrics</div>
-                                    </div>
-                                </button>
-
-                                <button onClick={() => router.push('/checkin')} className="login-button menu-button" style={{ textAlign: 'left', display: 'flex', gap: 12, alignItems: 'center', background: 'linear-gradient(90deg,#fff7f0,#f0fff4)', color: '#081028', border: '1px solid rgba(255,255,255,0.06)' }}>
-                                    <div style={{ fontSize: 32 }}>🏨</div>
-                                    <div>
-                                        <div style={{ fontSize: 18, fontWeight: 700 }}>Self Check-in</div>
-                                        <div style={{ fontSize: 13, color: '#475569' }}>Guest Kiosk Mode</div>
-                                    </div>
-                                </button>
-
-                                <button onClick={() => router.push('/profile')} className="login-button menu-button" style={{ textAlign: 'left', display: 'flex', gap: 12, alignItems: 'center', background: 'linear-gradient(90deg,#f8fbff,#fff6fb)', color: '#081028', border: '1px solid rgba(255,255,255,0.06)' }}>
-                                    <div style={{ fontSize: 32 }}>🆔</div>
-                                    <div>
-                                        <div style={{ fontSize: 18, fontWeight: 700 }}>Your Profile</div>
-                                        <div style={{ fontSize: 13, color: '#475569' }}>View Account Details</div>
-                                    </div>
-                                </button>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <button onClick={() => router.push('/upload-id')} className="login-button menu-button" style={{ textAlign: 'left', display: 'flex', gap: 12, alignItems: 'center', background: 'linear-gradient(90deg,#fff1f2,#f0f9ff)', color: '#081028', border: '1px solid rgba(255,255,255,0.06)' }}>
+                            <div style={{ fontSize: 32 }}>📄</div>
+                            <div>
+                                <div style={{ fontSize: 18, fontWeight: 700 }}>Re-Verify ID</div>
+                                <div style={{ fontSize: 13, color: '#475569' }}>Manage ID</div>
                             </div>
+                        </button>
+
+                        <button onClick={() => router.push('/register-face')} className="login-button menu-button" style={{ textAlign: 'left', display: 'flex', gap: 12, alignItems: 'center', background: 'linear-gradient(90deg,#fff7ed,#eef2ff)', color: '#081028', border: '1px solid rgba(255,255,255,0.06)' }}>
+                            <div style={{ fontSize: 32 }}>👤</div>
+                            <div>
+                                <div style={{ fontSize: 18, fontWeight: 700 }}>Re-Scan Face</div>
+                                <div style={{ fontSize: 13, color: '#475569' }}>Manage Biometrics</div>
+                            </div>
+                        </button>
+
+                        <button onClick={() => router.push('/checkin')} className="login-button menu-button" style={{ textAlign: 'left', display: 'flex', gap: 12, alignItems: 'center', background: 'linear-gradient(90deg,#fff7f0,#f0fff4)', color: '#081028', border: '1px solid rgba(255,255,255,0.06)' }}>
+                            <div style={{ fontSize: 32 }}>🏨</div>
+                            <div>
+                                <div style={{ fontSize: 18, fontWeight: 700 }}>Self Check-in</div>
+                                <div style={{ fontSize: 13, color: '#475569' }}>Guest Kiosk Mode</div>
+                            </div>
+                        </button>
+
+                        <button onClick={() => router.push('/profile')} className="login-button menu-button" style={{ textAlign: 'left', display: 'flex', gap: 12, alignItems: 'center', background: 'linear-gradient(90deg,#f8fbff,#fff6fb)', color: '#081028', border: '1px solid rgba(255,255,255,0.06)' }}>
+                            <div style={{ fontSize: 32 }}>🆔</div>
+                            <div>
+                                <div style={{ fontSize: 18, fontWeight: 700 }}>Your Profile</div>
+                                <div style={{ fontSize: 13, color: '#475569' }}>View Account Details</div>
+                            </div>
+                        </button>
+                    </div>
 
                     {/* footer logout removed; logout only available in profile dropdown */}
                 </div>

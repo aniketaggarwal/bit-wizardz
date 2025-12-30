@@ -146,7 +146,7 @@
 }
 
 .slick-input::placeholder {
-    color: #cbd5e1;
+    color: #94a3b8; /* Darker grey for better visibility */
 }
 
 .login-button {

@@ -1,4 +1,4 @@
-import Tesseract from 'tesseract.js';
+// import Tesseract from 'tesseract.js';
 
 // Keywords to look for (Case Insensitive)
 const REQUIRED_KEYWORDS = [
@@ -25,11 +25,14 @@ export const verifyAadhaarCard = async (
     try {
         console.log('[OCR] Starting scan for:', file.name);
 
+        const Tesseract = (await import('tesseract.js')).default;
+
         const { data: { text } } = await Tesseract.recognize(
             file,
             'eng+hin',
             { logger: m => console.log('[OCR Progress]', m.status, m.progress?.toFixed(2)) }
         );
+
 
         const lowerText = text.toLowerCase();
         // console.log('[OCR] Extracted Text:', lowerText); // Debugging

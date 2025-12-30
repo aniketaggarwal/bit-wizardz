@@ -9,7 +9,7 @@ interface FaceScannerProps {
 }
 
 export default function FaceScanner({ onScan, onInstructionChange }: FaceScannerProps) {
-    const { videoRef, startCamera, isStreamActive, error: cameraError } = useCamera();
+    const { videoRef, startCamera, stopCamera, isStreamActive, error: cameraError } = useCamera();
     const { isModelLoaded, isLoading: isModelsLoading } = useFaceApi();
 
     const [status, setStatus] = useState<'idle' | 'detecting' | 'blink-detected' | 'scanned'>('idle');
@@ -19,6 +19,17 @@ export default function FaceScanner({ onScan, onInstructionChange }: FaceScanner
     // Liveness State
     const blinkingRef = useRef(false);
     const scanLoopRef = useRef<number>(0);
+    const isMountedRef = useRef(true);
+
+    useEffect(() => {
+        isMountedRef.current = true;
+        return () => {
+            isMountedRef.current = false;
+            stopScanningLoop();
+            stopCamera(); // Explicitly stop camera on unmount
+        };
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, []);
 
     useEffect(() => {
         if (isModelLoaded && !isStreamActive) {
@@ -37,8 +48,12 @@ export default function FaceScanner({ onScan, onInstructionChange }: FaceScanner
     const startScanningLoop = () => {
         setStatus('detecting');
         setInstruction('Look at the camera and BLINK nicely');
+        // If instruction uses callback
+        if (onInstructionChange) onInstructionChange('Look at the camera and BLINK nicely');
 
         const loop = async () => {
+            if (!isMountedRef.current) return;
+
             if (videoRef.current && !videoRef.current.paused && !videoRef.current.ended) {
                 const result = await extractDescriptor(videoRef.current);
 
@@ -64,7 +79,7 @@ export default function FaceScanner({ onScan, onInstructionChange }: FaceScanner
 
                             // Reset if stuck for 2 seconds (faster reset)
                             setTimeout(() => {
-                                if (blinkingRef.current) {
+                                if (blinkingRef.current && isMountedRef.current) {
                                     blinkingRef.current = false;
                                     setStatus('detecting');
                                     setInstruction('Resetting... Open eyes wide!');
@@ -103,12 +118,21 @@ export default function FaceScanner({ onScan, onInstructionChange }: FaceScanner
         }
     };
 
+    // Unused restart for now but good to keep clean
+    /*
     const restart = () => {
         blinkingRef.current = false;
         setStatus('detecting');
         setInstruction('Look at the camera and BLINK nicely');
         startScanningLoop();
     };
+    */
+
+    // Propagate instruction changes to parent
+    useEffect(() => {
+        if (onInstructionChange) onInstructionChange(instruction);
+    }, [instruction, onInstructionChange]);
+
 
     if (isModelsLoading) return <div className="text-gray-500">Loading models...</div>;
     if (cameraError) return <div className="text-red-500">{cameraError}</div>;
@@ -137,3 +161,4 @@ export default function FaceScanner({ onScan, onInstructionChange }: FaceScanner
         </div>
     );
 }
+

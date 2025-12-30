@@ -143,8 +143,7 @@ export default function Login() {
     const { error } = await supabase.auth.verifyOtp({
       phone: `+91${contactInfo}`,
       token: otpValue,
-      type: 'sms',
-      is_mobile: false // Actually, type='sms' handles it
+      type: 'sms'
     });
 
     if (error) {

@@ -87,7 +87,7 @@ export const encryptFaceData = async (descriptor: Float32Array): Promise<Encrypt
     const cipherText = await window.crypto.subtle.encrypt(
         { name: ALGORITHM, iv },
         key,
-        data // TS should handle this fine now, or cast if needed
+        data as any
     );
 
     return { cipherText, iv };
@@ -98,9 +98,9 @@ export const decryptFaceData = async (encrypted: EncryptedData): Promise<Float32
     const key = await getEncryptionKey();
     try {
         const decryptedBuffer = await window.crypto.subtle.decrypt(
-            { name: ALGORITHM, iv: encrypted.iv },
+            { name: ALGORITHM, iv: encrypted.iv as any },
             key,
-            encrypted.cipherText
+            encrypted.cipherText as any
         );
         return uint8ToFloat32(new Uint8Array(decryptedBuffer));
     } catch (error) {
@@ -128,7 +128,7 @@ export const saveEncryptedEmbedding = async (name: string, descriptor: Float32Ar
             name,
             encryptedData: {
                 cipherText: arrayBufferToBase64(encrypted.cipherText),
-                iv: arrayBufferToBase64(encrypted.iv.buffer)
+                iv: arrayBufferToBase64(encrypted.iv.buffer as any)
             },
             timestamp: Date.now(),
         };

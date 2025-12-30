@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, Suspense } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
 import BackButton from '@/components/BackButton';
 import FaceScanner from '@/components/FaceScanner';
@@ -15,7 +15,7 @@ interface RegisteredFace {
     descriptor: Float32Array;
 }
 
-export default function CheckInPage() {
+function CheckInContent() {
     const router = useRouter();
     const searchParams = useSearchParams(); // Hook to read URL params
 
@@ -70,7 +70,7 @@ export default function CheckInPage() {
         // A. Verify Face locally first
         let bestMatchName = '';
         for (const face of faces) {
-            if (verifyFaceMatch(face.descriptor, liveDescriptor, 0.45)) {
+            if (await verifyFaceMatch(face.descriptor, liveDescriptor, 0.45)) {
                 bestMatchName = face.name;
                 break;
             }
@@ -247,65 +247,73 @@ export default function CheckInPage() {
                         </div>
                     </div>
 
-            {/* Step 1: QR Input (Simulation) */}
-            {checkinStep === 'scan-qr' && (
-                <div className="p-6 bg-white shadow rounded-lg flex flex-col gap-4">
-                    <h2 className="text-xl font-semibold">Scan Booking QR</h2>
-                    <input
-                        type="text"
-                        placeholder="Simulate QR (Session ID)"
-                        className="border p-2 rounded text-black font-mono"
-                        value={sessionId}
-                        onChange={e => setSessionId(e.target.value)}
-                    />
-                    <button
-                        onClick={handleQrScan}
-                        className="bg-black text-white py-2 rounded font-bold hover:bg-gray-800"
-                    >
-                        Next
-                    </button>
-                    <p className="text-xs text-gray-500">In real life, this would automatically scan.</p>
-                </div>
-            )}
-
-            {/* Step 2: Fetching Nonce Loading State */}
-            {checkinStep === 'fetch-nonce' && (
-                <div className="flex flex-col items-center">
-                    <div className="animate-spin h-8 w-8 border-4 border-blue-500 rounded-full border-t-transparent"></div>
-                    <p className="mt-4 text-gray-600">Securely contacting server...</p>
-                </div>
-            )}
-
-            {/* Step 3: Face Scan */}
-            {(checkinStep === 'scan-face' || checkinStep === 'verifying-server') && (
-                <div className="w-full max-w-md flex flex-col items-center gap-4">
-                    <FaceScanner onScan={handleFaceScan} />
-
-                    <p className="text-center mt-2 font-bold text-lg h-8">
-                        {verificationStatus === 'success' ? `Hello, ${matchedName}!` : 'Look at the camera...'}
-                    </p>
-
-                    {checkinStep === 'verifying-server' && (
-                        <div className="bg-blue-100 text-blue-700 px-4 py-2 rounded flex items-center gap-2">
-                            <div className="animate-spin h-4 w-4 border-2 border-blue-700 rounded-full border-t-transparent"></div>
-                            Verifying with Server...
+                    {/* Step 1: QR Input (Simulation) */}
+                    {checkinStep === 'scan-qr' && (
+                        <div className="p-6 bg-white shadow rounded-lg flex flex-col gap-4">
+                            <h2 className="text-xl font-semibold">Scan Booking QR</h2>
+                            <input
+                                type="text"
+                                placeholder="Simulate QR (Session ID)"
+                                className="border p-2 rounded text-black font-mono"
+                                value={sessionId}
+                                onChange={e => setSessionId(e.target.value)}
+                            />
+                            <button
+                                onClick={handleQrScan}
+                                className="bg-black text-white py-2 rounded font-bold hover:bg-gray-800"
+                            >
+                                Next
+                            </button>
+                            <p className="text-xs text-gray-500">In real life, this would automatically scan.</p>
                         </div>
                     )}
-                </div>
-            )}
 
-            {/* Step 4: Success -> Redirecting */}
-            {checkinStep === 'complete' && (
-                <div className="text-center p-8 bg-green-100 rounded-lg flex flex-col items-center shadow-lg">
-                    <div className="text-6xl mb-4">✅</div>
-                    <h2 className="text-3xl font-bold text-green-700 mb-2">Check-in Confirmed!</h2>
-                    <p className="text-lg">Redirecting to your Room Key...</p>
-                    <div className="animate-spin h-6 w-6 border-2 border-green-700 rounded-full border-t-transparent mt-4"></div>
-                </div>
-            )}
+                    {/* Step 2: Fetching Nonce Loading State */}
+                    {checkinStep === 'fetch-nonce' && (
+                        <div className="flex flex-col items-center">
+                            <div className="animate-spin h-8 w-8 border-4 border-blue-500 rounded-full border-t-transparent"></div>
+                            <p className="mt-4 text-gray-600">Securely contacting server...</p>
+                        </div>
+                    )}
+
+                    {/* Step 3: Face Scan */}
+                    {(checkinStep === 'scan-face' || checkinStep === 'verifying-server') && (
+                        <div className="w-full max-w-md flex flex-col items-center gap-4">
+                            <FaceScanner onScan={handleFaceScan} />
+
+                            <p className="text-center mt-2 font-bold text-lg h-8">
+                                {verificationStatus === 'success' ? `Hello, ${matchedName}!` : 'Look at the camera...'}
+                            </p>
+
+                            {checkinStep === 'verifying-server' && (
+                                <div className="bg-blue-100 text-blue-700 px-4 py-2 rounded flex items-center gap-2">
+                                    <div className="animate-spin h-4 w-4 border-2 border-blue-700 rounded-full border-t-transparent"></div>
+                                    Verifying with Server...
+                                </div>
+                            )}
+                        </div>
+                    )}
+
+                    {/* Step 4: Success -> Redirecting */}
+                    {checkinStep === 'complete' && (
+                        <div className="text-center p-8 bg-green-100 rounded-lg flex flex-col items-center shadow-lg">
+                            <div className="text-6xl mb-4">✅</div>
+                            <h2 className="text-3xl font-bold text-green-700 mb-2">Check-in Confirmed!</h2>
+                            <p className="text-lg">Redirecting to your Room Key...</p>
+                            <div className="animate-spin h-6 w-6 border-2 border-green-700 rounded-full border-t-transparent mt-4"></div>
+                        </div>
+                    )}
 
                 </div>
             </div>
         </main>
+    );
+}
+
+export default function CheckInPage() {
+    return (
+        <Suspense fallback={<div>Loading...</div>}>
+            <CheckInContent />
+        </Suspense>
     );
 }
