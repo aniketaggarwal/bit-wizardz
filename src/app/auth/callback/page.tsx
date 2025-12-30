@@ -25,15 +25,15 @@ export default function AuthCallbackPage() {
                         // Already Verified -> Menu (Skip Setup)
                         router.replace('/menu');
                     } else {
-                        // New User -> Setup
+                        // New User -> P1SU (Setup)
                         const name = user.user_metadata?.name || 'User';
-                        router.replace(`/upload-aadhaar?name=${encodeURIComponent(name)}`);
+                        router.replace(`/p1su?name=${encodeURIComponent(name)}`);
                     }
                 } catch (error) {
                     console.error("Profile check failed:", error);
-                    // Fallback to Setup in case of error
+                    // Fallback to P1SU in case of error
                     const name = user.user_metadata?.name || 'User';
-                    router.replace(`/upload-aadhaar?name=${encodeURIComponent(name)}`);
+                    router.replace(`/p1su?name=${encodeURIComponent(name)}`);
                 }
             } else {
                 // No User -> Login
