@@ -69,7 +69,7 @@ export default function QrCodeScanner({ onScanSuccess, onScanFailure }: QrScanne
                 if (scannerRef.current.isScanning) {
                     scannerRef.current.stop().then(() => scannerRef.current?.clear()).catch(console.error);
                 } else {
-                    scannerRef.current.clear().catch(console.error);
+                    try { scannerRef.current.clear(); } catch (e) { /* ignore */ }
                 }
             }
         };
