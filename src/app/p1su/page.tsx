@@ -12,13 +12,7 @@ function P1SUContent() {
     const [name, setName] = useState('');
     const [dob, setDob] = useState('');
     const [aadhaarLast4, setAadhaarLast4] = useState('');
-
-    // Phone & OTP State
     const [phone, setPhone] = useState('');
-    const [otp, setOtp] = useState('');
-    const [isPhoneValid, setIsPhoneValid] = useState(false);
-    const [otpSent, setOtpSent] = useState(false);
-    const [isPhoneVerified, setIsPhoneVerified] = useState(false);
     const [isLoading, setIsLoading] = useState(false);
 
     useEffect(() => {
@@ -45,47 +39,9 @@ function P1SUContent() {
         checkExistingProfile();
     }, [searchParams, router]);
 
-    const handleSendOtp = async () => {
-        if (!isPhoneValid) return;
-        setIsLoading(true);
-        try {
-            // Using updateUser triggers a 'phone_change' OTP for logged-in users
-            const { error } = await supabase.auth.updateUser({ phone: `+91${phone}` });
-            if (error) throw error;
-
-            setOtpSent(true);
-            alert('OTP sent to +91 ' + phone);
-        } catch (error: any) {
-            console.error('Error sending OTP:', error);
-            alert(error.message || 'Failed to send OTP.');
-        } finally {
-            setIsLoading(false);
-        }
-    };
-
-    const handleVerifyOtp = async () => {
-        if (otp.length !== 6) return;
-        setIsLoading(true);
-        try {
-            const { error } = await supabase.auth.verifyOtp({
-                phone: `+91${phone}`,
-                token: otp,
-                type: 'phone_change'
-            });
-            if (error) throw error;
-
-            setIsPhoneVerified(true);
-            alert('Phone Number Verified Successfully! ✅');
-        } catch (error: any) {
-            console.error('Error verifying OTP:', error);
-            alert(error.message || 'Invalid OTP. Please try again.');
-        } finally {
-            setIsLoading(false);
-        }
-    };
-
     const handleContinue = async () => {
-        if (dob && aadhaarLast4.length === 4 && isPhoneVerified) {
+        if (dob && aadhaarLast4.length === 4 && phone.length === 10) {
+            setIsLoading(true);
             try {
                 const { data: { user } } = await supabase.auth.getUser();
                 if (user) {
@@ -95,7 +51,7 @@ function P1SUContent() {
                         email: user.email, // Save Email from Auth
                         id_last4: aadhaarLast4,
                         dob: dob,
-                        phone: user.phone || `+91${phone}`, // Use verified phone from Auth or state
+                        phone: `+91${phone}`, // Save phone directly to profile
                         updated_at: new Date().toISOString()
                     });
                     if (error) throw error;
@@ -104,9 +60,11 @@ function P1SUContent() {
             } catch (error) {
                 console.error('Error saving profile:', error);
                 alert('Failed to save details. Please try again.');
+            } finally {
+                setIsLoading(false);
             }
         } else {
-            alert("Please verify your Phone Number and fill all details.");
+            alert("Please fill all details correctly.");
         }
     };
 
@@ -118,12 +76,9 @@ function P1SUContent() {
     };
 
     const handlePhoneChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-        if (isPhoneVerified) return; // Lock if already verified
         const val = e.target.value.replace(/\D/g, '');
         if (val.length <= 10) {
             setPhone(val);
-            setIsPhoneValid(val.length === 10);
-            setOtpSent(false); // Reset if number changes
         }
     };
 
@@ -177,9 +132,9 @@ function P1SUContent() {
                     />
                 </div>
 
-                {/* Phone Number */}
+                {/* Phone Number (No Verification) */}
                 <div className="input-group">
-                    <label className="input-label">Phone Number {isPhoneVerified && '✅'}</label>
+                    <label className="input-label">Phone Number</label>
                     <div style={{ display: 'flex', gap: '8px' }}>
                         <span style={{ padding: '12px', background: '#e2e8f0', borderRadius: '8px', color: '#64748b' }}>+91</span>
                         <input
@@ -190,64 +145,19 @@ function P1SUContent() {
                             value={phone}
                             onChange={handlePhoneChange}
                             inputMode="numeric"
-                            disabled={isPhoneVerified}
-                            style={{ flex: 1, backgroundColor: isPhoneVerified ? '#f0fdf4' : 'white' }}
+                            style={{ flex: 1 }}
                         />
                     </div>
                 </div>
 
-                {/* Send OTP Button */}
-                {isPhoneValid && !otpSent && !isPhoneVerified && (
-                    <button
-                        className="signup-button"
-                        onClick={handleSendOtp}
-                        disabled={isLoading}
-                        style={{ backgroundColor: '#3b82f6', marginTop: '0px', marginBottom: '16px' }}
-                    >
-                        {isLoading ? 'Sending...' : 'Send OTP'}
-                    </button>
-                )}
-
-                {/* OTP Input & Verify */}
-                {otpSent && !isPhoneVerified && (
-                    <div className="input-group animate-fade-in" style={{ marginTop: '0' }}>
-                        <label className="input-label">Enter OTP</label>
-                        <div style={{ display: 'flex', gap: '8px' }}>
-                            <input
-                                type="text"
-                                className="slick-input"
-                                placeholder="123456"
-                                maxLength={6}
-                                value={otp}
-                                onChange={(e) => setOtp(e.target.value.replace(/\D/g, ''))}
-                                inputMode="numeric"
-                                style={{ letterSpacing: '4px', textAlign: 'center' }}
-                            />
-                            <button
-                                onClick={handleVerifyOtp}
-                                disabled={otp.length !== 6 || isLoading}
-                                style={{
-                                    padding: '0 20px',
-                                    borderRadius: '8px',
-                                    backgroundColor: otp.length === 6 ? '#22c55e' : '#cbd5e1',
-                                    color: 'white',
-                                    fontWeight: 'bold',
-                                    border: 'none',
-                                    cursor: otp.length === 6 ? 'pointer' : 'not-allowed'
-                                }}
-                            >
-                                {isLoading ? '...' : 'Verify'}
-                            </button>
-                        </div>
-                        <p className="text-xs text-blue-400 mt-1 cursor-pointer" onClick={() => setOtpSent(false)}>
-                            Change Number?
-                        </p>
-                    </div>
-                )}
-
                 {/* Continue Button */}
-                <button className="signup-button" onClick={handleContinue}>
-                    Continue
+                <button
+                    className="signup-button"
+                    onClick={handleContinue}
+                    disabled={isLoading}
+                    style={{ marginTop: '24px' }}
+                >
+                    {isLoading ? 'Saving...' : 'Continue'}
                 </button>
 
             </div>
