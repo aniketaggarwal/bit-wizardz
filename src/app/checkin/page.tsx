@@ -255,13 +255,13 @@ function CheckInContent() {
                             {/* Option A: Scanner */}
                             <div className="bg-black rounded-xl overflow-hidden shadow-2xl">
                                 <QrCodeScanner
-                                    onScanSuccess={(decodedText) => {
+                                    onScanSuccess={(decodedText: string) => {
                                         console.log("QR Scanned:", decodedText); // Debug
                                         setSessionId(decodedText);
                                         // Slight delay to show success state before transition
                                         setTimeout(() => handleAutoStart(decodedText), 300);
                                     }}
-                                    onScanFailure={(err) => {
+                                    onScanFailure={(err: any) => {
                                         // console.warn(err); // Too noisy
                                     }}
                                 />
