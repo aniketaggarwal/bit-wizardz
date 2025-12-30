@@ -27,8 +27,8 @@ export default function QrCodeScanner({ onScanSuccess, onScanFailure }: QrScanne
                 scannerRef.current = html5QrCode;
 
                 const config = {
-                    fps: 10,
-                    qrbox: { width: 250, height: 250 },
+                    fps: 15, // Increase for faster scanning
+                    // qrbox: { width: 250, height: 250 }, // Removed to allow full-width/auto scanning
                     aspectRatio: 1.0,
                 };
 

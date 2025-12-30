@@ -187,7 +187,7 @@ function CheckInContent() {
                             {checkinStep === 'scan-qr' && (
                                 <div className="flex flex-col gap-4 animate-fade-in mt-4">
                                     {/* Option A: Scanner */}
-                                    <div className="bg-black rounded-xl overflow-hidden shadow-2xl mx-auto w-full max-w-sm">
+                                    <div className="bg-black rounded-xl overflow-hidden shadow-2xl mx-auto w-full max-w-sm relative">
                                         <QrCodeScanner
                                             onScanSuccess={(decodedText: string) => {
                                                 console.log("QR Scanned:", decodedText);
@@ -198,6 +198,14 @@ function CheckInContent() {
                                                 // console.warn(err); 
                                             }}
                                         />
+                                        {/* Scan Success Overlay */}
+                                        {sessionId && (
+                                            <div className="absolute inset-0 bg-black/80 flex flex-col items-center justify-center animate-in fade-in duration-200 z-10">
+                                                <div className="text-4xl">✨</div>
+                                                <p className="text-white font-bold mt-2">QR Detected!</p>
+                                                <div className="animate-spin h-5 w-5 border-2 border-green-500 rounded-full border-t-transparent mt-4"></div>
+                                            </div>
+                                        )}
                                     </div>
 
                                     <div className="flex items-center gap-4 my-2">
