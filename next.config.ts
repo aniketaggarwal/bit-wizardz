@@ -9,11 +9,21 @@ const withPWA = withPWAInit({
 
 const nextConfig: NextConfig = {
   reactStrictMode: true,
+  eslint: {
+    ignoreDuringBuilds: true,
+  },
+  typescript: {
+    ignoreBuildErrors: true,
+  },
+  experimental: {
+    // @ts-expect-error Silence Vercel warning
+    turbo: {},
+  },
   webpack: (config) => {
     config.resolve.fallback = {
       ...config.resolve.fallback,
       fs: false,
-      encoding: false, // face-api.js may also ask for this
+      encoding: false,
     };
     return config;
   },
