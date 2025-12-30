@@ -1,11 +1,11 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, Suspense } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
 import { supabase } from '@/lib/supabase';
 import '../signup/signup.css'; // Reusing styling from Signup
 
-export default function P1SU() {
+function P1SUContent() {
     const router = useRouter();
     const searchParams = useSearchParams();
 
@@ -252,5 +252,17 @@ export default function P1SU() {
 
             </div>
         </main>
+    );
+}
+
+export default function P1SU() {
+    return (
+        <Suspense fallback={
+            <div className="flex h-screen items-center justify-center bg-black text-white">
+                Loading...
+            </div>
+        }>
+            <P1SUContent />
+        </Suspense>
     );
 }
