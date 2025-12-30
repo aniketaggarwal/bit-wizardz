@@ -4,6 +4,7 @@ import { useState, useEffect, Suspense } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
 import BackButton from '@/components/BackButton';
 import FaceScanner from '@/components/FaceScanner';
+import QrCodeScanner from '@/components/QrCodeScanner';
 import { loadEncryptedEmbeddings } from '@/lib/encryption';
 import { verifyFaceMatch } from '@/lib/face-util';
 import { getPrivateKey, getPublicKey } from '@/lib/auth-crypto';
@@ -247,24 +248,47 @@ function CheckInContent() {
                         </div>
                     </div>
 
-                    {/* Step 1: QR Input (Simulation) */}
+                    {/* Step 1: QR Input (Scanner + Manual Fallback) */}
                     {checkinStep === 'scan-qr' && (
-                        <div className="p-6 bg-white shadow rounded-lg flex flex-col gap-4">
-                            <h2 className="text-xl font-semibold">Scan Booking QR</h2>
-                            <input
-                                type="text"
-                                placeholder="Simulate QR (Session ID)"
-                                className="border p-2 rounded text-black font-mono"
-                                value={sessionId}
-                                onChange={e => setSessionId(e.target.value)}
-                            />
-                            <button
-                                onClick={handleQrScan}
-                                className="bg-black text-white py-2 rounded font-bold hover:bg-gray-800"
-                            >
-                                Next
-                            </button>
-                            <p className="text-xs text-gray-500">In real life, this would automatically scan.</p>
+                        <div className="flex flex-col gap-6 animate-fade-in">
+
+                            {/* Option A: Scanner */}
+                            <div className="bg-black rounded-xl overflow-hidden shadow-2xl">
+                                <QrCodeScanner
+                                    onScanSuccess={(decodedText) => {
+                                        console.log("QR Scanned:", decodedText); // Debug
+                                        setSessionId(decodedText);
+                                        // Slight delay to show success state before transition
+                                        setTimeout(() => handleAutoStart(decodedText), 300);
+                                    }}
+                                    onScanFailure={(err) => {
+                                        // console.warn(err); // Too noisy
+                                    }}
+                                />
+                            </div>
+
+                            <div className="flex items-center gap-4">
+                                <div className="h-px bg-slate-700 flex-1"></div>
+                                <span className="text-slate-500 text-sm font-bold uppercase">Or Enter Manually</span>
+                                <div className="h-px bg-slate-700 flex-1"></div>
+                            </div>
+
+                            {/* Option B: Manual Input */}
+                            <div className="p-4 bg-white/5 rounded-lg border border-white/10 flex gap-2">
+                                <input
+                                    type="text"
+                                    placeholder="Enter Session ID (e.g. BOOKING-1234)"
+                                    className="flex-1 bg-transparent border-none text-white placeholder-slate-500 focus:ring-0 outline-none font-mono"
+                                    value={sessionId}
+                                    onChange={e => setSessionId(e.target.value)}
+                                />
+                                <button
+                                    onClick={handleQrScan}
+                                    className="px-4 py-2 bg-blue-600 text-white rounded-lg font-bold text-sm hover:bg-blue-500"
+                                >
+                                    Go
+                                </button>
+                            </div>
                         </div>
                     )}
 
