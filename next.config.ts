@@ -15,10 +15,7 @@ const nextConfig: NextConfig = {
   typescript: {
     ignoreBuildErrors: true,
   },
-  experimental: {
-    // @ts-expect-error Silence Vercel warning
-    turbo: {},
-  },
+
   webpack: (config) => {
     config.resolve.fallback = {
       ...config.resolve.fallback,
