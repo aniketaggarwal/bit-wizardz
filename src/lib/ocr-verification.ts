@@ -41,11 +41,16 @@ export const verifyAadhaarCard = async (
         const foundKeywords = REQUIRED_KEYWORDS.filter(keyword =>
             lowerText.includes(keyword.toLowerCase())
         );
-        const isAadhaar = foundKeywords.length >= 2;
+
+        // RELAXED LOGIC:
+        // 1. If we find the specific "Last 4 Digits" of the user, we assume it's the right doc (strongest signal).
+        // 2. Otherwise, look for at least 1 keyword (was 2).
+        const hasLast4 = expectedDetails?.last4 && lowerText.includes(expectedDetails.last4);
+        const isAadhaar = hasLast4 || foundKeywords.length >= 1;
         const errors: string[] = [];
 
         if (!isAadhaar) {
-            errors.push("Document does not appear to be a valid Aadhaar card.");
+            errors.push("Document does not appear to be a valid Aadhaar card. Ensure text is clear.");
         }
 
         // 2. Data Matching Check (Does it belong to this user?)
