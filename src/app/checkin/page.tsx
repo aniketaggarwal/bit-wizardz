@@ -165,32 +165,63 @@ function CheckInContent() {
                     {/* Step cards */}
                     <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(280px,1fr))', gap: 14, marginBottom: 18 }}>
                         {/* QR Card */}
-                        <div style={{ background: 'rgba(255,255,255,0.06)', padding: 18, borderRadius: 12, boxShadow: '0 10px 30px rgba(2,6,23,0.4)' }}>
-                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                        <div style={{ background: 'rgba(255,255,255,0.06)', padding: 18, borderRadius: 12, boxShadow: '0 10px 30px rgba(2,6,23,0.4)', overflow: 'hidden' }}>
+                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: checkinStep === 'scan-qr' ? 12 : 0 }}>
                                 <div>
                                     <div style={{ fontSize: 18, fontWeight: 800 }}>1. Scan Booking QR</div>
                                     <div style={{ color: '#94a3b8', marginTop: 6, fontSize: 13 }}>Scan the QR or enter the session ID provided at the hotel desk.</div>
                                 </div>
                                 <div>
-                                    <button
-                                        onClick={handleQrScan}
-                                        style={checkinStep === 'scan-qr' ? { background: '#000', color: '#fff', padding: '10px 14px', borderRadius: 10, fontWeight: 800 } : { background: '#ffffff', color: '#000', padding: '10px 14px', borderRadius: 10, fontWeight: 800 }}
-                                    >
-                                        {checkinStep === 'scan-qr' ? 'Scan/Next' : 'Scan'}
-                                    </button>
+                                    {checkinStep !== 'scan-qr' && (
+                                        <button
+                                            onClick={() => setCheckinStep('scan-qr')}
+                                            style={{ background: '#ffffff', color: '#000', padding: '10px 14px', borderRadius: 10, fontWeight: 800 }}
+                                        >
+                                            Scan
+                                        </button>
+                                    )}
                                 </div>
                             </div>
 
+                            {/* Scanner / Input Area */}
                             {checkinStep === 'scan-qr' && (
-                                <div style={{ marginTop: 12 }}>
-                                    <input
-                                        type="text"
-                                        placeholder="Simulate QR (Session ID)"
-                                        className="slick-input"
-                                        value={sessionId}
-                                        onChange={e => setSessionId(e.target.value)}
-                                    />
-                                    <p style={{ fontSize: 12, color: '#94a3b8', marginTop: 8 }}>In real life, this would automatically scan.</p>
+                                <div className="flex flex-col gap-4 animate-fade-in mt-4">
+                                    {/* Option A: Scanner */}
+                                    <div className="bg-black rounded-xl overflow-hidden shadow-2xl mx-auto w-full max-w-sm">
+                                        <QrCodeScanner
+                                            onScanSuccess={(decodedText: string) => {
+                                                console.log("QR Scanned:", decodedText);
+                                                setSessionId(decodedText);
+                                                setTimeout(() => handleAutoStart(decodedText), 300);
+                                            }}
+                                            onScanFailure={(err: any) => {
+                                                // console.warn(err); 
+                                            }}
+                                        />
+                                    </div>
+
+                                    <div className="flex items-center gap-4 my-2">
+                                        <div className="h-px bg-slate-700 flex-1"></div>
+                                        <span className="text-slate-500 text-xs font-bold uppercase">Or Enter Manually</span>
+                                        <div className="h-px bg-slate-700 flex-1"></div>
+                                    </div>
+
+                                    {/* Option B: Manual Input */}
+                                    <div className="p-3 bg-white/5 rounded-lg border border-white/10 flex gap-2">
+                                        <input
+                                            type="text"
+                                            placeholder="Booking ID (e.g. BOOKING-1234)"
+                                            className="flex-1 bg-transparent border-none text-white placeholder-slate-500 focus:ring-0 outline-none font-mono text-sm"
+                                            value={sessionId}
+                                            onChange={e => setSessionId(e.target.value)}
+                                        />
+                                        <button
+                                            onClick={handleQrScan}
+                                            className="px-4 py-2 bg-blue-600 text-white rounded-lg font-bold text-sm hover:bg-blue-500"
+                                        >
+                                            Next
+                                        </button>
+                                    </div>
                                 </div>
                             )}
                         </div>
