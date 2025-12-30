@@ -18,7 +18,7 @@ export default function Login() {
     const { error } = await supabase.auth.signInWithOAuth({
       provider: "google",
       options: {
-        redirectTo: `${window.location.origin}/dashboard`,
+        redirectTo: `${window.location.protocol}//${window.location.host}/dashboard`,
       },
     });
     if (error) setError(error.message);
@@ -34,7 +34,7 @@ export default function Login() {
     setError(null);
     const { error } = await supabase.auth.signInWithOtp({
       email: email,
-      options: { emailRedirectTo: `${window.location.origin}/dashboard` },
+      options: { emailRedirectTo: `${window.location.protocol}//${window.location.host}/dashboard` },
     });
     if (error) setError(error.message);
     else alert("Check your email for the login link!");
