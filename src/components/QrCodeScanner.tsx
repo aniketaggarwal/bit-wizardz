@@ -15,13 +15,13 @@ export default function QrCodeScanner({ onScanSuccess, onScanFailure }: QrScanne
     const [scanning, setScanning] = useState(true);
 
     useEffect(() => {
-        // Initialize Scanner on Mount
+        // Use a flag to prevent race conditions in Strict Mode
+        let isMounted = true;
+
         const initScanner = async () => {
             try {
-                // Determine format
-                const formatsToSupport = [
-                    Html5QrcodeSupportedFormats.QR_CODE,
-                ];
+                // If already scanning, skip
+                if (scannerRef.current?.isScanning) return;
 
                 const html5QrCode = new Html5Qrcode("reader");
                 scannerRef.current = html5QrCode;
@@ -29,40 +29,48 @@ export default function QrCodeScanner({ onScanSuccess, onScanFailure }: QrScanne
                 const config = {
                     fps: 10,
                     qrbox: { width: 250, height: 250 },
-                    aspectRatio: 1
+                    aspectRatio: 1.0,
                 };
 
-                // Start Camera
                 await html5QrCode.start(
-                    { facingMode: "environment" }, // Prefer Back Camera
+                    { facingMode: "environment" },
                     config,
                     (decodedText, decodedResult) => {
-                        // Success Callback
-                        setScanning(false);
-                        onScanSuccess(decodedText, decodedResult);
-                        // Stop scanning after success to prevent multiple triggers
-                        html5QrCode.stop().catch(console.error);
+                        if (isMounted) {
+                            setScanning(false);
+                            onScanSuccess(decodedText, decodedResult);
+                            // Stop immediately after success
+                            html5QrCode.stop().then(() => html5QrCode.clear()).catch(console.error);
+                        }
                     },
                     (errorMessage) => {
-                        // Failure Callback (Optional log, usually noisy)
+                        // ignored
                         if (onScanFailure) onScanFailure(errorMessage);
                     }
                 );
             } catch (err: any) {
-                console.error("Camera Init Error:", err);
-                setCameraError("Failed to access camera. Please allow permissions.");
-                setScanning(false);
+                if (isMounted) {
+                    console.error("Camera Init Error:", err);
+                    setCameraError("Camera access failed. Please use manual input.");
+                    setScanning(false);
+                }
             }
         };
 
-        if (scanning) {
+        // Small delay to ensure DOM is ready and previous instances cleared
+        const timer = setTimeout(() => {
             initScanner();
-        }
+        }, 100);
 
-        // Cleanup
         return () => {
-            if (scannerRef.current && scannerRef.current.isScanning) {
-                scannerRef.current.stop().catch(console.error);
+            isMounted = false;
+            clearTimeout(timer);
+            if (scannerRef.current) {
+                if (scannerRef.current.isScanning) {
+                    scannerRef.current.stop().then(() => scannerRef.current?.clear()).catch(console.error);
+                } else {
+                    scannerRef.current.clear().catch(console.error);
+                }
             }
         };
         // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -78,7 +86,7 @@ export default function QrCodeScanner({ onScanSuccess, onScanFailure }: QrScanne
                 </div>
             ) : (
                 <div className="relative">
-                    <div id="reader" className="w-full h-[350px] bg-black"></div>
+                    <div id="reader" className="w-full h-[350px] bg-black [&>video]:scale-x-100 [&>video]:!transform-none"></div>
 
                     {/* Overlay Frame */}
                     <div className="absolute inset-0 pointer-events-none border-[40px] border-black/50">
